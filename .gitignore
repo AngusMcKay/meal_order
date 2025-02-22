@@ -1,0 +1,6 @@
+*.xls*
+*.csv
+*checkpoint.ipynb
+*.pickle
+*pycache*
+config.py
