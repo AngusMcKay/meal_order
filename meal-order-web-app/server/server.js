@@ -32,11 +32,31 @@ const Meal = mongoose.model("Meal", MealSchema);
 app.get("/meals", async (req, res) => {
     try {
         const meals = await Meal.find();
-        console.log("Meals sent to frontend:", meals);
+        //console.log("Meals sent to frontend:", meals); // useful for testing but don't want to always print thousands of documents to console
         res.json(meals);
     } catch (err) {
         console.error("Error fetching meals:", err);
         res.status(500).json({ error: "Error fetching meals" });
+    }
+});
+
+// Define Item schema and model
+const ItemSchema = new mongoose.Schema({ // TO DO
+    name: String,
+    items: [String]
+});
+
+const Item = mongoose.model("Item", {});  // NEED TO REPLACE WITH ACTUAL SCHEMA ONCE SET UP
+
+// API to fetch meals
+app.get("/items", async (req, res) => {
+    try {
+        const items = await Item.find();
+        //console.log("Items sent to frontend:", items); // useful for testing but don't want to always print thousands of documents to console
+        res.json(items);
+    } catch (err) {
+        console.error("Error fetching items:", err);
+        res.status(500).json({ error: "Error fetching items" });
     }
 });
 

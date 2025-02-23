@@ -17,19 +17,10 @@ const SelectMeals = () => {
     
     // Fetch meals from backend
     useEffect(() => {
-        fetch("http://localhost:5000/meals") // Adjust backend URL if needed
+        fetch("http://localhost:5000/meals")
             .then((response) => response.json())
-            .then((data) => {
-                if (Array.isArray(data)) {
-                    setMealsData(data);
-                    console.log("Fetched meals data:", mealsData)
-                } else {
-                    console.error("Invalid data format from backend:", data);
-                }
-            })
-            .catch((err) => {
-                console.error("Error fetching meals:", err);
-            });
+            .then((data) => setMealsData(data))
+            .catch((err) => console.error("Error fetching meals:", err));
     }, []);
 
     const handleMealChange = (event) => {
@@ -82,7 +73,7 @@ const SelectMeals = () => {
 
             <h1 className="meal-title">Select Your Meal</h1>
             <p className="meal-description">
-                Select a meal below and add items to your order.
+                Select a meal below and add items to your order
             </p>
             <select className="meal-dropdown" onChange={handleMealChange} value={selectedMeal}>
                 <option value="" disabled>Select a meal</option>
