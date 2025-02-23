@@ -9,6 +9,44 @@
     padding: 20px;
 }
 
+/* Adding a background with faint food icons */
+.container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/assets/cooking-spice-pattern-black-white-colors/0811229.jpg'); 
+    background-size: 1500px;
+    opacity: 0.05;
+    z-index: 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px;
+}
+
+.cart-button-home {
+    position: absolute;
+    top: 10px;
+    right: 5px;
+    background: white;
+    padding: 10px 15px;
+    border: solid;
+    border-color: #245682;
+    border-width: 2px;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 20px;
+    color: #444;
+    margin-left: 4px;
+    margin-right: 4px;
+    z-index: 1;
+}
+
 .title {
     font-size: 80px;
     font-weight: bold;
@@ -32,6 +70,7 @@
     display: flex;
     justify-content: center;
     gap: 20px;
+    z-index: 1;
 }
 
 .button {
@@ -40,7 +79,7 @@
     font-weight: bold;
     border-radius: 10px;
     border: none;
-    color: white;
+    color: #245682;
     cursor: pointer;
     transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
 }
@@ -49,11 +88,63 @@
     transform: scale(1.1);
 }
 
-.blue { background-color: #3b82f6; }
-.blue:hover { background-color: #2563eb; }
+.meals { background-color: #6bcad1; }
+.meals:hover { background-color: #3cbac3; }
 
-.green { background-color: #10b981; }
-.green:hover { background-color: #059669; }
+.items { background-color: #ffde8f; }
+.items:hover { background-color: #ffd166; }
 
-.purple { background-color: #9333ea; }
-.purple:hover { background-color: #7e22ce; }
+.create { background-color: #ff909e; }
+.create:hover { background-color: #ff8091; }
+
+
+/* cart items */
+.cart-sidebar {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    overflow-y: auto;
+    z-index: 2;
+    align-items: left;
+    text-align: left;
+}
+
+.cart-title {
+    flex: 1;
+    font-size: 30px;
+    color: #444;
+}
+
+.cart-meal {
+    border-bottom: 1px solid #ddd;
+    padding: 5px 0;
+    margin-top: 20px;
+    color: #444;
+}
+
+.cart-item-text {
+    flex: 1;
+    text-align: left;
+    font-size: 20px;
+    color: #444;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.remove-cart-item {
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+}
+.remove-cart-item:hover { transform: scale(1.2); }
+
+

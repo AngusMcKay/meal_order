@@ -10,6 +10,7 @@ const SelectItems = () => {
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
     const [cartVisible, setCartVisible] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -19,8 +20,14 @@ const SelectItems = () => {
     useEffect(() => {
         fetch("http://localhost:5000/items")
             .then(response => response.json())
-            .then(data => setItems(data))
-            .catch(error => console.error("Error fetching items:", error));
+            .then(data => {
+                setItems(data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error("Error fetching items:", error);
+                setLoading(false);
+            });
     }, []);
 
     const handleAddToOrder = (item) => {
@@ -49,44 +56,53 @@ const SelectItems = () => {
 
     return (
         <div className="items-container">
-            <div className="header">
-                <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
-                <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+            <div className="top-section">
+                <div className="header">
+                    <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
+                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+                </div>
+                <h1 className="items-title">Select Individual Items</h1>
             </div>
 
-            <h1 className="items-title">Select Individual Items</h1>
-            <p className="items-description">
-                Seach for and select individual items to add to order
-            </p>
-            <input 
-                type="text" 
-                placeholder="Search for an item..." 
-                className="search-bar" 
-                value={search} 
-                onChange={(e) => setSearch(e.target.value)}
-            />
-            <p className="items-description">
-                Change the description below before adding items to store them under different headings in the cart 
-            </p>
-            <input 
-                type="text" 
-                placeholder="Enter category name (optional)" 
-                className="category-input" 
-                value={customHeading} 
-                onChange={(e) => setCustomHeading(e.target.value)}
-            />
+            <div className="bottom-section">
+                <p className="items-description">
+                    Seach for and select individual items to add to order
+                </p>
+                <input 
+                    type="text" 
+                    placeholder="Search for an item..." 
+                    className="search-bar" 
+                    value={search} 
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <p className="items-description">
+                    Change the description below before adding items<br></br>to store them under different headings in the cart 
+                </p>
+                <input 
+                    type="text" 
+                    placeholder="Enter category name (optional)" 
+                    className="category-input" 
+                    value={customHeading} 
+                    onChange={(e) => setCustomHeading(e.target.value)}
+                />
 
-            <div className="items-list">
-                {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
-                    <div key={item._id} className="item formatted-item">
-                        <span className="item-text">{item.name}</span>
-                        <button className="add-item-button" onClick={() => handleAddToOrder(item.name)}>Add</button>
+                {loading ? (
+                    <div className="loading-message">Finding items...<div className="loading-spinner"></div></div>
+                ) : (
+                    <div className="items-list">
+                        {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
+                            <div key={item._id} className="item formatted-item">
+                                <span className="item-text">{item.name}{item.size ? ` (${item.size.value})` : ""}, £{item.price.current.amount}</span>
+                                <button className="add-item-button" onClick={() => handleAddToOrder(item.name)}>Add</button>
+                            </div>
+                        ))}
                     </div>
-                ))}
+                )}
             </div>
 
             {cartVisible && (
                 <div className="cart-sidebar">
+                    <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
                     <h2 className="cart-title">Cart</h2>
                     {orderList.length > 0 ? (
                         orderList.map((order, mealIndex) => (

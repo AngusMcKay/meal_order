@@ -1,17 +1,48 @@
 .items-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f3f4f6;
+    height: 100vh;
+}
+
+/* Styling for the top section */
+.top-section {
+    background: #ffde8f;
+    color: white;
     text-align: center;
+    padding-top: 10px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+}
+
+/* Styling for the bottom section */
+.bottom-section {
+    flex-grow: 1;
+    background-color: #f4f4f4;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Adding a background with faint food icons */
+.bottom-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/assets/cooking-spice-pattern-black-white-colors/0811229.jpg');
+    background-size: 1500px;
+    opacity: 0.05;
+    z-index: 0;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
-    padding: 10px;
+    padding: 2px;
 }
 
 .home-button, .cart-button {
@@ -31,17 +62,16 @@
 .items-title {
     font-size: 80px;
     font-weight: bold;
-    margin-bottom: 20px;
+    margin-bottom: 2px;
     color: #245682;
 }
 
 .items-description {
-    font-size: 28px;
+    font-size: 24px;
     color: #4a5568;
     max-width: 1100px;
-    margin-bottom: 40px;
+    margin-bottom: 15px;
 }
-
 
 /* Dropdown Styling */
 .search-bar, .category-input {
@@ -55,6 +85,7 @@
     outline: none;
     cursor: pointer;
     transition: border-color 0.3s ease-in-out;
+    z-index: 1;
 }
 
 .meal-dropdown:hover,
@@ -68,6 +99,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 1;
 }
 
 /* Individual Item */
@@ -113,8 +145,7 @@
     color: white;
     cursor: pointer;
     transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
-    background-color: #3b82f6;
-    background-color: #2563eb;
+    background-color: #58855C;
 }
 
 /* cart items */
@@ -163,3 +194,24 @@
 }
 .remove-cart-item:hover { transform: scale(1.2); }
 
+
+/* Loading spinner */
+.loading-message {
+    margin-top: 20px;
+    color: #444;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(0, 0, 0, 0.2);
+    border-top-color: #2575fc;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

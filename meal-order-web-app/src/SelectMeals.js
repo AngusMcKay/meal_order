@@ -66,21 +66,26 @@ const SelectMeals = () => {
 
     return (
         <div className="meal-container">
-            <div className="header">
-                <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
-                <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+            <div className="top-section-meals"> 
+                <div className="header">
+                    <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
+                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+                </div>
+
+                <h1 className="meal-title">Select Your Meal</h1>
             </div>
 
-            <h1 className="meal-title">Select Your Meal</h1>
-            <p className="meal-description">
-                Select a meal below and add items to your order
-            </p>
-            <select className="meal-dropdown" onChange={handleMealChange} value={selectedMeal}>
-                <option value="" disabled>Select a meal</option>
-                {mealsData.map((meal) => (
-                    <option key={meal.name} value={meal.name}>{meal.name}</option>
-                ))}
-            </select>
+            <div className="bottom-section-meals"> 
+                <p className="meal-description">
+                    Select a meal below and add items to your order
+                </p>
+                <select className="meal-dropdown" onChange={handleMealChange} value={selectedMeal}>
+                    <option value="" disabled>Select a meal</option>
+                    {mealsData.map((meal) => (
+                        <option key={meal.name} value={meal.name}>{meal.name}</option>
+                    ))}
+                </select>
+            </div>
             
             {selectedMeal && (
                 <div className="items-list">
@@ -99,6 +104,7 @@ const SelectMeals = () => {
 
             {cartVisible && (
                 <div className="cart-sidebar">
+                    <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
                     <h2 className="cart-title">Cart</h2>
                     {orderList.length > 0 ? (
                         orderList.map((order, mealIndex) => (
