@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./SelectMeals.css";
 
-const mealsData = {
-    "Pasta Meal": ["Pasta", "Tomato Sauce", "Parmesan Cheese"],
-    "Salad Meal": ["Lettuce", "Tomato", "Cucumber", "Dressing"],
-    "Breakfast Meal": ["Eggs", "Toast", "Orange Juice"],
-};
-
 const SelectMeals = () => {
+    const [mealsData, setMealsData] = useState([]);
     const [selectedMeal, setSelectedMeal] = useState("");
     const [selectedItems, setSelectedItems] = useState({});
     const [orderList, setOrderList] = useState(() => {
@@ -19,11 +14,33 @@ const SelectMeals = () => {
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
     }, [orderList]);
+    
+    // Fetch meals from backend
+    useEffect(() => {
+        fetch("http://localhost:5000/meals") // Adjust backend URL if needed
+            .then((response) => response.json())
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setMealsData(data);
+                    console.log("Fetched meals data:", mealsData)
+                } else {
+                    console.error("Invalid data format from backend:", data);
+                }
+            })
+            .catch((err) => {
+                console.error("Error fetching meals:", err);
+            });
+    }, []);
 
     const handleMealChange = (event) => {
-        const meal = event.target.value;
-        setSelectedMeal(meal);
-        setSelectedItems(mealsData[meal].reduce((acc, item) => ({ ...acc, [item]: true }), {}));
+        const mealName = event.target.value;
+        setSelectedMeal(mealName);
+
+        // Find the meal object from the fetched meals list
+        const meal = mealsData.find((m) => m.name === mealName);
+        if (meal) {
+            setSelectedItems(meal.items.reduce((acc, item) => ({ ...acc, [item]: true }), {}));
+        }
     };
 
     const toggleItemSelection = (item) => {
@@ -69,14 +86,14 @@ const SelectMeals = () => {
             </p>
             <select className="meal-dropdown" onChange={handleMealChange} value={selectedMeal}>
                 <option value="" disabled>Select a meal</option>
-                {Object.keys(mealsData).map((meal) => (
-                    <option key={meal} value={meal}>{meal}</option>
+                {mealsData.map((meal) => (
+                    <option key={meal.name} value={meal.name}>{meal.name}</option>
                 ))}
             </select>
             
             {selectedMeal && (
                 <div className="items-list">
-                    {mealsData[selectedMeal].map((item) => (
+                    {mealsData.find(m => m.name === selectedMeal)?.items.map((item) => (
                         <div key={item} className="item">
                             <span className="item-text">{item}</span>
                             <span className={selectedItems[item] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(item)}>✔</span>
