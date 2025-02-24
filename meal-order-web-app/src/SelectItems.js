@@ -92,7 +92,7 @@ const SelectItems = () => {
                     <div className="items-list">
                         {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
                             <div key={item._id} className="item formatted-item">
-                                <span className="item-text">{item.name}{item.size ? ` (${item.size.value})` : ""}, £{item.price.current.amount}</span>
+                                <span className="item-text">{item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}</span>
                                 <button className="add-item-button" onClick={() => handleAddToOrder(item.name)}>Add</button>
                             </div>
                         ))}

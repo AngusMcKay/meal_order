@@ -1,0 +1,218 @@
+.create-meals-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Styling for the top section */
+.top-section-create {
+    background: #ff909e;
+    color: white;
+    text-align: center;
+    padding-top: 10px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+}
+
+/* Styling for the bottom section */
+.bottom-section-create {
+    flex-grow: 1;
+    background-color: #f4f4f4;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Adding a background with faint food icons */
+.bottom-section-create::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/assets/cooking-spice-pattern-black-white-colors/0811229.jpg');
+    background-size: 1500px;
+    opacity: 0.05;
+    z-index: 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px;
+}
+
+.home-button, .cart-button {
+    background: white;
+    padding: 10px 15px;
+    border: solid;
+    border-color: #245682;
+    border-width: 2px;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 20px;
+    color: #444;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.create-title {
+    font-size: 80px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    color: #245682;
+}
+
+.create-description {
+    font-size: 24px;
+    color: #4a5568;
+    max-width: 1100px;
+    margin-bottom: 15px;
+}
+
+.create-new {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between input and button */
+}
+
+.create-new-input {
+    width: 80%;
+    padding: 10px;
+    font-size: 20px;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.3s ease-in-out;
+    position: relative;
+    z-index: 1;
+}
+
+.create-new-button {
+    margin-left: 20px;
+    margin-top: 1px;
+    padding: 3px 3px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
+    background-color: #58855C;
+    position: relative;
+    z-index: 1;
+    white-space: nowrap; /* Prevents button text from breaking */
+}
+
+.error-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(255, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeInOut 3s ease-in-out;
+}
+
+/* Optional fade-in/out effect */
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.create-option-split {
+    align-items: center;
+    margin: auto;
+    text-align: center;
+    font-size: 24px;
+    color: #4a5568;
+    max-width: 1100px;
+    margin: 15px;
+}
+
+.edit-existing-pretext {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+}
+
+/* Dropdown Styling */
+.edit-meal-dropdown {
+    width: 100%;
+    padding: 10px;
+    font-size: 20px;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.3s ease-in-out;
+    position: relative;
+    z-index: 1;
+}
+
+/* Edit Controls */
+.edit-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.save-button {
+    padding: 8px 15px;
+    background-color: #58855C;
+    font-size: 20px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.create-add-order {
+    padding: 8px 15px;
+    background-color: #cc8f00;
+    font-size: 20px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.go-back-button {
+    padding: 8px 15px;
+    background-color: #b30000;
+    font-size: 20px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.change-meal-dropdown {
+    width: 100%;
+    padding: 10px;
+    font-size: 20px;
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.3s ease-in-out;
+}
