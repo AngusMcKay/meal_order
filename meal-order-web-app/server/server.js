@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Define Meal schema and model
 const MealSchema = new mongoose.Schema({
     name: String,
-    items: [String]
+    items: []
 });
 
 const Meal = mongoose.model("Meal", MealSchema);

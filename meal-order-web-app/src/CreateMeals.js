@@ -3,6 +3,7 @@ import "./CreateMeals.css";
 
 const CreateMeals = () => {
     const [meals, setMeals] = useState([]);
+    const [editedMeals, setEditedMeals] = useState([]);
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
     const [newMealName, setNewMealName] = useState("");
@@ -49,7 +50,19 @@ const CreateMeals = () => {
     };
 
     const handleAddItemToMeal = (item) => {
-        setMealItems([...mealItems, item]);
+        const newItemsList = mealItems
+        newItemsList.push(item)
+        setMealItems(newItemsList);
+        setMeals((prevMeals) => {
+            const updatedMeals = prevMeals.map((meal) => {
+                if (meal.name === selectedMeal) {
+                    return { name: selectedMeal, items: newItemsList };
+                }
+                return meal;
+            });
+            return updatedMeals;
+        });
+        setEditedMeals([...editedMeals, selectedMeal])
     };
 
     const handleStoreMeal = () => {
@@ -108,11 +121,11 @@ const CreateMeals = () => {
 
                             
                             <div className="create-option-split">
-                                Or edit an existing meal
+                                Or
                             </div>
 
                             <div className="edit-existing">
-                                <select className="edit-meal-dropdown" onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
+                                <select className="edit-meal-dropdown" value="" onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
                                     <option value="" disabled>Select existing meal to edit</option>
                                     {meals.map(meal => (
                                         <option key={meal.name} value={meal.name}>{meal.name}</option>

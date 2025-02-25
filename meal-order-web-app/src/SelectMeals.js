@@ -30,7 +30,8 @@ const SelectMeals = () => {
         // Find the meal object from the fetched meals list
         const meal = mealsData.find((m) => m.name === mealName);
         if (meal) {
-            setSelectedItems(meal.items.reduce((acc, item) => ({ ...acc, [item]: true }), {}));
+            setSelectedItems(meal.items.reduce((accumulator, item) => ({ ...accumulator, [item.name]: true }), {}));
+            console.log(JSON.stringify(selectedItems))
         }
     };
 
@@ -90,10 +91,10 @@ const SelectMeals = () => {
             {selectedMeal && (
                 <div className="items-list">
                     {mealsData.find(m => m.name === selectedMeal)?.items.map((item) => (
-                        <div key={item} className="item">
-                            <span className="item-text">{item}</span>
-                            <span className={selectedItems[item] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(item)}>✔</span>
-                            <span className={!selectedItems[item] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(item)}>✖</span>
+                        <div key={item._id} className="item">
+                            <span className="item-text">{item.name}</span>
+                            <span className={selectedItems[item.name] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(item.name)}>✔</span>
+                            <span className={!selectedItems[item.name] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(item.name)}>✖</span>
                         </div>
                     ))}
                     <button className="add-order-button" onClick={handleAddToOrder}>Add To Order</button>
