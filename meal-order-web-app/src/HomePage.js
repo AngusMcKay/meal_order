@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "@mui/material";
 import "./HomePage.css";
+import "./Generic.css";
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -11,11 +12,11 @@ const HomePage = () => {
     });
     const [cartVisible, setCartVisible] = useState(false);
 
-    const removeCartItem = (mealIndex, item) => {
+    const removeCartItem = (mealIndex, itemIndex) => {
         setOrderList((prevOrders) => {
             const updatedOrders = prevOrders.map((order, index) => {
                 if (index === mealIndex) {
-                    return { ...order, items: order.items.filter((i) => i !== item) };
+                    return { ...order, items: order.items.filter((i, idx) => idx !== itemIndex) };
                 }
                 return order;
             }).filter(order => order.items.length > 0);
@@ -26,7 +27,7 @@ const HomePage = () => {
     return (
         <div className="container">
             <div className="header">
-                <button className="cart-button-home" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+                <button className="cart-button-home" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
             </div>
             <h1 className="title">Welcome to the Meal Order Web App</h1>
             <p className="description">
@@ -51,15 +52,15 @@ const HomePage = () => {
             {cartVisible && (
                 <div className="cart-sidebar">
                     <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
-                    <h2 className="cart-title">Cart</h2>
+                    <h2 className="cart-title">Shopping List</h2>
                     {orderList.length > 0 ? (
                         orderList.map((order, mealIndex) => (
                             <div key={mealIndex} className="cart-meal">
                                 <strong>{order.meal}</strong>
-                                {order.items.map((item) => (
-                                    <div key={item} className="cart-item">
-                                        <span className="cart-item-text">{item}</span>
-                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, item)}>✖</span>
+                                {order.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="cart-item">
+                                        <span className="cart-item-text">{item.name}</span>
+                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
                                     </div>
                                 ))}
                             </div>

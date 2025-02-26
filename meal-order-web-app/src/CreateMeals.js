@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./CreateMeals.css";
+import "./Generic.css";
 
 const CreateMeals = () => {
     const [meals, setMeals] = useState([]);
@@ -16,6 +17,11 @@ const CreateMeals = () => {
     });
     const [cartVisible, setCartVisible] = useState(false);
     const [editingMode, setEditingMode] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        localStorage.setItem("orderList", JSON.stringify(orderList));
+    }, [orderList]);
 
     useEffect(() => {
         fetch("http://localhost:5000/meals")
@@ -25,8 +31,14 @@ const CreateMeals = () => {
 
         fetch("http://localhost:5000/items")
             .then(response => response.json())
-            .then(data => setItems(data))
-            .catch(error => console.error("Error fetching items:", error));
+            .then(data => {
+                setItems(data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error("Error fetching items:", error)
+                setLoading(false);
+            });
     }, []);
 
     const handleCreateMeal = () => {
@@ -86,12 +98,24 @@ const CreateMeals = () => {
         setSelectedMeal(null);
     };
 
+    const removeCartItem = (mealIndex, itemIndex) => {
+        setOrderList((prevOrders) => {
+            const updatedOrders = prevOrders.map((order, index) => {
+                if (index === mealIndex) {
+                    return { ...order, items: order.items.filter((i, idx) => idx !== itemIndex) };
+                }
+                return order;
+            }).filter(order => order.items.length > 0);
+            return updatedOrders;
+        });
+    };
+
     return (
         <div className="create-meals-container">
             <div className="top-section-create">
                 <div className="header">
                     <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
-                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
                 <h1 className="title">Create Meals</h1>
             </div>
@@ -142,8 +166,8 @@ const CreateMeals = () => {
                             <button className="save-button" onClick={handleStoreMeal}>Save</button>
                             <button className="create-add-order" onClick={handleAddMealToOrder}>Add to Order</button>
                             <button className="go-back-button" onClick={handleGoBack}>Back</button>
-                            <select className="change-meal-dropdown" value={selectedMeal} onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
-                                <option value="" disabled>Select a meal</option>
+                            <select className="change-meal-dropdown" value="" onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
+                                <option value="" disabled>Change meal</option>
                                 {meals.map(meal => (
                                     <option key={meal.name} value={meal.name}>{meal.name}</option>
                                 ))}
@@ -161,21 +185,30 @@ const CreateMeals = () => {
                                     </ul>
                                 </div>
 
-                                <div className="search-items">
-                                    <input 
+                                <div className="search-items-create">
+                                    <input
+                                        className="search-bar-create" 
                                         type="text" 
                                         placeholder="Search for an item..." 
                                         value={search} 
                                         onChange={(e) => setSearch(e.target.value)}
                                     />
-                                    <div className="items-list">
-                                        {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
-                                            <div key={item._id} className="item formatted-item">
-                                                <span className="item-text">{item.name}</span>
-                                                <button className="add-item-button" onClick={() => handleAddItemToMeal(item)}>Add</button>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {loading ? (
+                                        <div className="loading-message">Finding items...<div className="loading-spinner"></div></div>
+                                    ) : (
+                                        <div className="items-list-create">
+                                            {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
+                                                <div key={item._id} className="item-create">
+                                                    <span className="item-text">{item.name}</span>
+                                                    <button className="add-item-button" onClick={() => handleAddItemToMeal(item)}>Add</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="meal-details-balance">
+
                                 </div>
                             </div>
                         )}
@@ -184,6 +217,27 @@ const CreateMeals = () => {
                 )}
             </div>
 
+            {cartVisible && (
+                <div className="cart-sidebar">
+                    <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
+                    <h2 className="cart-title">Shopping List</h2>
+                    {orderList.length > 0 ? (
+                        orderList.map((order, mealIndex) => (
+                            <div key={mealIndex} className="cart-meal">
+                                <strong>{order.meal}</strong>
+                                {order.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="cart-item">
+                                        <span className="cart-item-text">{item.name}</span>
+                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ))
+                    ) : (
+                        <p>No items in the cart.</p>
+                    )}
+                </div>
+            )}
 
         </div>
     );

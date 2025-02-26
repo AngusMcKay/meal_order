@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./SelectItems.css";
+import "./Generic.css";
 
 const SelectItems = () => {
     const [items, setItems] = useState([]);
@@ -32,21 +33,21 @@ const SelectItems = () => {
 
     const handleAddToOrder = (item) => {
         setOrderList((prevOrders) => {
-            const existingCategory = prevOrders.find(order => order.meal === customHeading);
+            const existingCategory = prevOrders.find(order => order.meal.toLowerCase() === customHeading.toLowerCase());
             if (existingCategory) {
                 return prevOrders.map(order =>
-                    order.meal === customHeading ? { ...order, items: [...order.items, item] } : order
+                    order.meal.toLowerCase() === customHeading.toLowerCase() ? { ...order, items: [...order.items, item] } : order
                 );
             }
             return [...prevOrders, { meal: customHeading, items: [item] }];
         });
     };
 
-    const removeCartItem = (mealIndex, item) => {
+    const removeCartItem = (mealIndex, itemIndex) => {
         setOrderList((prevOrders) => {
             const updatedOrders = prevOrders.map((order, index) => {
                 if (index === mealIndex) {
-                    return { ...order, items: order.items.filter((i) => i !== item) };
+                    return { ...order, items: order.items.filter((i, idx) => idx !== itemIndex) };
                 }
                 return order;
             }).filter(order => order.items.length > 0);
@@ -59,7 +60,7 @@ const SelectItems = () => {
             <div className="top-section">
                 <div className="header">
                     <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
-                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
                 <h1 className="items-title">Select Individual Items</h1>
             </div>
@@ -69,9 +70,9 @@ const SelectItems = () => {
                     Seach for and select individual items to add to order
                 </p>
                 <input 
+                    className="search-bar" 
                     type="text" 
                     placeholder="Search for an item..." 
-                    className="search-bar" 
                     value={search} 
                     onChange={(e) => setSearch(e.target.value)}
                 />
@@ -93,7 +94,7 @@ const SelectItems = () => {
                         {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
                             <div key={item._id} className="item formatted-item">
                                 <span className="item-text">{item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}</span>
-                                <button className="add-item-button" onClick={() => handleAddToOrder(item.name)}>Add</button>
+                                <button className="add-item-button" onClick={() => handleAddToOrder(item)}>Add</button>
                             </div>
                         ))}
                     </div>
@@ -103,15 +104,15 @@ const SelectItems = () => {
             {cartVisible && (
                 <div className="cart-sidebar">
                     <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
-                    <h2 className="cart-title">Cart</h2>
+                    <h2 className="cart-title">Shopping List</h2>
                     {orderList.length > 0 ? (
                         orderList.map((order, mealIndex) => (
                             <div key={mealIndex} className="cart-meal">
                                 <strong>{order.meal}</strong>
-                                {order.items.map((item) => (
-                                    <div key={item} className="cart-item">
-                                        <span className="cart-item-text">{item}</span>
-                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, item)}>✖</span>
+                                {order.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="cart-item">
+                                        <span className="cart-item-text">{item.name}</span>
+                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
                                     </div>
                                 ))}
                             </div>

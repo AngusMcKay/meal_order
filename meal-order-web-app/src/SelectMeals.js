@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./SelectMeals.css";
+import "./Generic.css";
 
 const SelectMeals = () => {
     const [mealsData, setMealsData] = useState([]);
@@ -30,29 +31,29 @@ const SelectMeals = () => {
         // Find the meal object from the fetched meals list
         const meal = mealsData.find((m) => m.name === mealName);
         if (meal) {
-            setSelectedItems(meal.items.reduce((accumulator, item) => ({ ...accumulator, [item.name]: true }), {}));
+            setSelectedItems(meal.items.reduce((accumulator, item, index) => ({ ...accumulator, [index]: true }), {}));  // changed to idx
             console.log(JSON.stringify(selectedItems))
         }
     };
 
-    const toggleItemSelection = (item) => {
-        setSelectedItems((prev) => ({ ...prev, [item]: !prev[item] }));
+    const toggleItemSelection = (itemIndex) => { // changed to idx
+        setSelectedItems((prev) => ({ ...prev, [itemIndex]: !prev[itemIndex] }));  // changed to idx
     };
 
     const handleAddToOrder = () => {
-        const selectedOrder = Object.keys(selectedItems).filter((item) => selectedItems[item]);
+        const selectedOrder = mealsData.find((m) => m.name === selectedMeal).items.filter((item, index) => selectedItems[index]) // Object.keys(selectedItems).filter((item) => selectedItems[item]);
         if (selectedOrder.length > 0) {
             setOrderList((prevOrders) => [...prevOrders, { meal: selectedMeal, items: selectedOrder }]);
         }
-        console.log("Added to order:", selectedOrder);
-        alert(`Added to order: ${selectedOrder.join(", ")}`);
+        // console.log("Added to order:", selectedOrder);  // removed as part of id add
+        // alert(`Added to order: ${selectedOrder.join(", ")}`);  // removed as part of id add
     };
 
-    const removeCartItem = (mealIndex, item) => {
+    const removeCartItem = (mealIndex, itemIndex) => {
         setOrderList((prevOrders) => {
             const updatedOrders = prevOrders.map((order, index) => {
                 if (index === mealIndex) {
-                    return { ...order, items: order.items.filter((i) => i !== item) };
+                    return { ...order, items: order.items.filter((i, idx) => idx !== itemIndex) };
                 }
                 return order;
             }).filter(order => order.items.length > 0);
@@ -60,17 +61,19 @@ const SelectMeals = () => {
         });
     }
 
+    /* // Ignore favourites for now
     const handleAddToFaves = () => {
         console.log("Added to favourites:", selectedMeal);
         alert(`Added to favourites: ${selectedMeal}\nContaining items: ${Object.keys(selectedItems).join(", ")}`);
     };
+    */
 
     return (
         <div className="meal-container">
             <div className="top-section-meals"> 
                 <div className="header">
                     <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
-                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Cart</button>
+                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
 
                 <h1 className="meal-title">Select Your Meal</h1>
@@ -90,31 +93,33 @@ const SelectMeals = () => {
             
             {selectedMeal && (
                 <div className="items-list">
-                    {mealsData.find(m => m.name === selectedMeal)?.items.map((item) => (
-                        <div key={item._id} className="item">
+                    {mealsData.find(m => m.name === selectedMeal)?.items.map((item, index) => (
+                        <div key={index} className="item">
                             <span className="item-text">{item.name}</span>
-                            <span className={selectedItems[item.name] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(item.name)}>✔</span>
-                            <span className={!selectedItems[item.name] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(item.name)}>✖</span>
+                            <span className={selectedItems[index] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(index)}>✔</span>
+                            <span className={!selectedItems[index] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(index)}>✖</span>
                         </div>
                     ))}
                     <button className="add-order-button" onClick={handleAddToOrder}>Add To Order</button>
+                    {/*
                     <br/>
                     <button className="add-faves-button" onClick={handleAddToFaves}>Add To Favourites</button>
+                    */}
                 </div>
             )}
 
             {cartVisible && (
                 <div className="cart-sidebar">
                     <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
-                    <h2 className="cart-title">Cart</h2>
+                    <h2 className="cart-title">Shopping List</h2>
                     {orderList.length > 0 ? (
                         orderList.map((order, mealIndex) => (
                             <div key={mealIndex} className="cart-meal">
                                 <strong>{order.meal}</strong>
-                                {order.items.map((item) => (
-                                    <div key={item} className="cart-item">
-                                        <span className="cart-item-text">{item}</span>
-                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, item)}>✖</span>
+                                {order.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="cart-item">
+                                        <span className="cart-item-text">{item.name}</span>
+                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
                                     </div>
                                 ))}
                             </div>
