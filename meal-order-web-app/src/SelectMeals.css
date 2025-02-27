@@ -105,9 +105,9 @@
 }
 
 /* Selection Icons */
-.bold-green { color: green; font-weight: bold; cursor: pointer; font-size: 24px; margin-left: 10px; }
+.bold-green { color: #2E6F40; font-weight: bold; cursor: pointer; font-size: 24px; margin-left: 10px; }
 .faded-green { color: rgba(0, 128, 0, 0.3); cursor: pointer; font-size: 24px; margin-left: 10px; }
-.bold-red { color: red; font-weight: bold; cursor: pointer; font-size: 24px; margin-left: 10px; }
+.bold-red { color: #C04000; font-weight: bold; cursor: pointer; font-size: 24px; margin-left: 10px; }
 .faded-red { color: rgba(255, 0, 0, 0.3); cursor: pointer; font-size: 24px; margin-left: 10px; }
 
 .bold-green:hover { transform: scale(1.2); }

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./CreateMeals.css";
 import "./Generic.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const CreateMeals = () => {
     const [meals, setMeals] = useState([]);
@@ -18,6 +21,7 @@ const CreateMeals = () => {
     const [cartVisible, setCartVisible] = useState(false);
     const [editingMode, setEditingMode] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -52,6 +56,7 @@ const CreateMeals = () => {
         setSelectedMeal(newMealName);
         setMealItems([]);
         setEditingMode(true);
+        setIsMealPopupOpen(true);
         setNewMealName("");
     };
 
@@ -59,6 +64,7 @@ const CreateMeals = () => {
         setSelectedMeal(meal.name);
         setMealItems(meal.items);
         setEditingMode(true);
+        setIsMealPopupOpen(true);
     };
 
     const handleAddItemToMeal = (item) => {
@@ -74,18 +80,53 @@ const CreateMeals = () => {
             });
             return updatedMeals;
         });
-        setEditedMeals([...editedMeals, selectedMeal])
+        if (editedMeals.some(item => selectedMeal === item)) {
+            setEditedMeals([...editedMeals, selectedMeal]);
+        }
     };
 
-    const handleStoreMeal = () => {
-        fetch("http://localhost:5000/meals", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: selectedMeal, items: mealItems })
-        })
-            .then(response => response.json())
-            .then(data => console.log("Meal stored successfully", data))
-            .catch(error => console.error("Error storing meal:", error));
+    const handleRemoveMealItem = (index) => {
+        const newItemsList = mealItems.filter((item, idx) => idx !== index);
+        setMealItems(newItemsList);
+        setMeals((prevMeals) => {
+            const updatedMeals = prevMeals.map((meal) => {
+                if (meal.name === selectedMeal) {
+                    return { name: selectedMeal, items: newItemsList};
+                }
+                return meal;
+            });
+            return updatedMeals;
+        });
+        if (editedMeals.some(item => selectedMeal === item)) {
+            setEditedMeals([...editedMeals, selectedMeal]);
+        }
+    };
+
+    const handleStoreMeal = async () => {
+        if (!selectedMeal) {
+            alert("Please select a meal to save.");
+            return;
+        }
+        try {
+            const response = await fetch("http://localhost:5000/upsertMeal", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: selectedMeal,
+                    items: mealItems
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                toast.success("Meal saved successfully!", { position: "top-center" });
+            } else {
+                toast.error("Error saving meal.", { position: "top-center" });
+            }
+        } catch (error) {
+            console.error("Error saving meal:", error);
+            toast.error("Server error.", { position: "top-center" });
+        }
     };
 
     const handleAddMealToOrder = () => {
@@ -96,6 +137,7 @@ const CreateMeals = () => {
     const handleGoBack = () => {
         setEditingMode(false);
         setSelectedMeal(null);
+        setIsMealPopupOpen(false);
     };
 
     const removeCartItem = (mealIndex, itemIndex) => {
@@ -112,6 +154,7 @@ const CreateMeals = () => {
 
     return (
         <div className="create-meals-container">
+            <ToastContainer />
             <div className="top-section-create">
                 <div className="header">
                     <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
@@ -176,14 +219,24 @@ const CreateMeals = () => {
 
                         {selectedMeal && (
                             <div className="meal-edit-section">
-                                <div className="meal-details">
-                                    <h2>{selectedMeal}</h2>
-                                    <ul>
+                                {isMealPopupOpen && (
+                                    <div className="meal-details">
+                                        <button className="close-meal-details" onClick={() => setIsMealPopupOpen(false)}>◀ Hide</button>
+                                        <h2 className='meal-details-meal-name'>{selectedMeal}</h2>
                                         {mealItems.map((item, index) => (
-                                            <li key={index}>{item.name}</li>
+                                            <div key={item._id} className="item-create-meal">
+                                                <span className="item-create-meal-text" key={index}>{item.name}</span>
+                                                <span className="remove-meal-item" onClick={() => handleRemoveMealItem(index)}>✖</span>
+                                            </div>
                                         ))}
-                                    </ul>
-                                </div>
+                                    </div>
+                                )}
+
+                                {!isMealPopupOpen && (
+                                    <div className="meal-details-minimised">
+                                        <button className="open-meal-details" onClick={() => setIsMealPopupOpen(true)}>▶</button>
+                                    </div>
+                                )}
 
                                 <div className="search-items-create">
                                     <input
@@ -194,7 +247,7 @@ const CreateMeals = () => {
                                         onChange={(e) => setSearch(e.target.value)}
                                     />
                                     {loading ? (
-                                        <div className="loading-message">Finding items...<div className="loading-spinner"></div></div>
+                                        <div className="loading-message-create">Finding items...<div className="loading-spinner"></div></div>
                                     ) : (
                                         <div className="items-list-create">
                                             {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
@@ -205,10 +258,6 @@ const CreateMeals = () => {
                                             ))}
                                         </div>
                                     )}
-                                </div>
-
-                                <div className="meal-details-balance">
-
                                 </div>
                             </div>
                         )}

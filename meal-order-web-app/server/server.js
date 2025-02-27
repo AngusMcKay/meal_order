@@ -60,5 +60,27 @@ app.get("/items", async (req, res) => {
     }
 });
 
+// Upsert created or edited meals
+app.post("/upsertMeal", async (req, res) => {
+    const { name, items } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ error: "Meal name is required" });
+    }
+
+    try {
+        const updatedMeal = await Meal.findOneAndUpdate(
+            { name: name }, // Find by name (case-insensitive match)
+            { name, items }, // Update or Insert
+            { upsert: true, new: true, setDefaultsOnInsert: true } // Upsert options
+        );
+
+        res.json({ success: true, meal: updatedMeal });
+    } catch (error) {
+        console.error("Error upserting meal:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
