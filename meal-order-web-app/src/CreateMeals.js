@@ -3,6 +3,7 @@ import "./CreateMeals.css";
 import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
 
 
 const CreateMeals = () => {
@@ -267,25 +268,30 @@ const CreateMeals = () => {
             </div>
 
             {cartVisible && (
-                <div className="cart-sidebar">
-                    <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
-                    <h2 className="cart-title">Shopping List</h2>
-                    {orderList.length > 0 ? (
-                        orderList.map((order, mealIndex) => (
-                            <div key={mealIndex} className="cart-meal">
-                                <strong>{order.meal}</strong>
-                                {order.items.map((item, itemIndex) => (
-                                    <div key={itemIndex} className="cart-item">
-                                        <span className="cart-item-text">{item.name}</span>
-                                        <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ))
-                    ) : (
-                        <p>No items in the cart.</p>
-                    )}
-                </div>
+                <>
+                    <div className="cart-sidebar">
+                        <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
+                        <h2 className="cart-title">Shopping List</h2>
+                        {orderList.length > 0 ? (
+                            orderList.map((order, mealIndex) => (
+                                <div key={mealIndex} className="cart-meal">
+                                    <strong>{order.meal}</strong>
+                                    {order.items.map((item, itemIndex) => (
+                                        <div key={itemIndex} className="cart-item">
+                                            <span className="cart-item-text">{item.name}</span>
+                                            <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))
+                        ) : (
+                            <p>No items in the cart.</p>
+                        )}
+                    </div>
+                    <div className='cart-sidebar-bottom'>
+                        <button className="export-order-button" onClick={() => loadBasketMorrisons(orderList)}>Export Order</button>
+                    </div>
+                </>
             )}
 
         </div>
