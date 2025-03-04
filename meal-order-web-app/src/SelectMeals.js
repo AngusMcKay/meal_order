@@ -96,7 +96,17 @@ const SelectMeals = () => {
                 <div className="items-list">
                     {mealsData.find(m => m.name === selectedMeal)?.items.map((item, index) => (
                         <div key={index} className="item">
-                            <span className="item-text">{item.name}</span>
+                            <span className="item-text">
+                                {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
+                                <sup>
+                                    <a 
+                                        href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="item-link"
+                                    >view ⎘</a>
+                                </sup>
+                            </span>
                             <span className={selectedItems[index] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(index)}>✔</span>
                             <span className={!selectedItems[index] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(index)}>✖</span>
                         </div>

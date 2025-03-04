@@ -53,7 +53,7 @@
     margin-bottom: 15px;
 }
 
-/* Dropdown Styling */
+/* Dropdown and input styling */
 .search-bar, .category-input {
     width: 40%;
     padding: 10px;
@@ -63,7 +63,7 @@
     background-color: #fff;
     color: #333;
     outline: none;
-    cursor: pointer;
+    cursor: text;
     transition: border-color 0.3s ease-in-out;
     z-index: 1;
 }
@@ -97,11 +97,16 @@
 }
 
 /* Item Text */
-.item-text {
+.item-text-select-items {
     flex: 1;
     text-align: left;
     font-size: 20px;
     color: #444;
+}
+
+.item-text-select-items sup {
+    margin-left: 5px;
+    font-size: 0.7em;
 }
 
 .add-item-button {

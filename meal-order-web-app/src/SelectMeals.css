@@ -104,6 +104,11 @@
     color: #444;
 }
 
+.item-text sup {
+    margin-left: 5px;
+    font-size: 0.7em;
+}
+
 /* Selection Icons */
 .bold-green { color: #2E6F40; font-weight: bold; cursor: pointer; font-size: 24px; margin-left: 10px; }
 .faded-green { color: rgba(0, 128, 0, 0.3); cursor: pointer; font-size: 24px; margin-left: 10px; }

@@ -18,6 +18,16 @@
     margin-right: 4px;
 }
 
+.item-link {
+    text-decoration: none;
+    color: #898989;
+    font-weight: bold;
+}
+
+.item-link:hover {
+    color: #444;
+}
+
 /* cart items */
 .cart-sidebar {
     position: fixed;
@@ -105,3 +115,5 @@
     transform: scale(1.02);
     background-color: #ffd166;
 }
+
+

@@ -23,6 +23,7 @@ const CreateMeals = () => {
     const [editingMode, setEditingMode] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);
+    const [recipeLink, setRecipeLink] = useState("");
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -59,23 +60,29 @@ const CreateMeals = () => {
         setEditingMode(true);
         setIsMealPopupOpen(true);
         setNewMealName("");
+        setRecipeLink("");
     };
 
     const handleSelectMeal = (meal) => {
+        let mealRecipe = ""
+        if (meal.recipe) {
+            mealRecipe = meal.recipe;
+        }
         setSelectedMeal(meal.name);
         setMealItems(meal.items);
+        setRecipeLink(mealRecipe)
         setEditingMode(true);
         setIsMealPopupOpen(true);
     };
 
     const handleAddItemToMeal = (item) => {
-        const newItemsList = mealItems
-        newItemsList.push(item)
+        const newItemsList = mealItems;
+        newItemsList.push(item);
         setMealItems(newItemsList);
         setMeals((prevMeals) => {
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
-                    return { name: selectedMeal, items: newItemsList };
+                    return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
                 }
                 return meal;
             });
@@ -92,7 +99,23 @@ const CreateMeals = () => {
         setMeals((prevMeals) => {
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
-                    return { name: selectedMeal, items: newItemsList};
+                    return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
+                }
+                return meal;
+            });
+            return updatedMeals;
+        });
+        if (editedMeals.some(item => selectedMeal === item)) {
+            setEditedMeals([...editedMeals, selectedMeal]);
+        }
+    };
+
+    const handleAddMealRecipe = (recipe) => {
+        setRecipeLink(recipe);
+        setMeals((prevMeals) => {
+            const updatedMeals = prevMeals.map((meal) => {
+                if (meal.name === selectedMeal) {
+                    return { name: selectedMeal, items: mealItems, recipe: recipe };
                 }
                 return meal;
             });
@@ -114,7 +137,8 @@ const CreateMeals = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: selectedMeal,
-                    items: mealItems
+                    items: mealItems,
+                    recipe: recipeLink
                 }),
             });
 
@@ -217,6 +241,17 @@ const CreateMeals = () => {
                                 ))}
                             </select>
                         </div>
+                        <div className="recipe-link-container">
+                            <p htmlFor="recipe-link">Recipe Link:</p>
+                            <input 
+                                type="text" 
+                                id="recipe-link" 
+                                placeholder="Paste recipe URL here..." 
+                                value={recipeLink} 
+                                onChange={(e) => handleAddMealRecipe(e.target.value)} 
+                                className="recipe-link-input"
+                            />
+                        </div>
 
                         {selectedMeal && (
                             <div className="meal-edit-section">
@@ -253,7 +288,17 @@ const CreateMeals = () => {
                                         <div className="items-list-create">
                                             {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
                                                 <div key={item._id} className="item-create">
-                                                    <span className="item-text">{item.name}</span>
+                                                    <span className="item-text-create">
+                                                        {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
+                                                        <sup>
+                                                            <a 
+                                                                href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="item-link"
+                                                            >view ⎘</a>
+                                                        </sup>
+                                                    </span>
                                                     <button className="add-item-button" onClick={() => handleAddItemToMeal(item)}>Add</button>
                                                 </div>
                                             ))}
