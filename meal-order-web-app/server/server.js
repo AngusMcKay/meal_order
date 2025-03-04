@@ -221,47 +221,20 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
 
                 try { // Must be a better way to do this?
                     await driver.get(productUrl);
+                    let a1 = `@aria-label='Add ${item.name} to basket'`
+                    let a2 = `@aria-label='Add ${item.name}  to basket'`
+                    let a3 = `@aria-label='Add ${item.name}   to basket'`
+                    let i1 = `@aria-label='Increase quantity of ${item.name} in trolley'`
+                    let i2 = `@aria-label='Increase quantity of ${item.name}  in trolley'`
+                    let i3 = `@aria-label='Increase quantity of ${item.name}   in trolley'`
 
-                    // First try
-                    //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name} to basket']`));
-                    let addButton = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Add ${item.name} to basket']`)), 5000);
+                    let addButton = await driver.wait(until.elementLocated(By.xpath(
+                        `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);
                     await addButton.click();
                     console.log(`✅ Added: ${item.name}`);
-                } catch (err1) {
-                    try {
-                        // Second try with extra space
-                        //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
-                        let addButtonAlt = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`)), 5000);
-                        await addButtonAlt.click();
-                        console.log(`✅ Added (alt): ${item.name}`);
-                    } catch (err2) {
-                        try {
-                            // Third try with increase instead of add
-                            //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
-                            let incButton = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Increase quantity of ${item.name} in trolley']`)), 5000);
-                            await incButton.click();
-                            console.log(`✅ Increased: ${item.name}`);
-                        } catch (err3) {
-                            try {
-                                // Fourth try with increase with extra space
-                                //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
-                                let incButtonAlt = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Increase quantity of ${item.name}  in trolley']`)), 5000);
-                                await incButtonAlt.click();
-                                console.log(`✅ Increased (alt): ${item.name}`);
-                            } catch (err4) {
-                                try {
-                                    // Fifth try with increase with extra space
-                                    //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
-                                    let incButtonAlt2 = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Increase quantity of ${item.name}   in trolley']`)), 5000);
-                                    await incButtonAlt2.click();
-                                    console.log(`✅ Increased (alt2): ${item.name}`);
-                                } catch (err5) {
-                                    console.log(`❌ Failed to add: ${item.name}`);
-                                    failedItems.push(item);
-                                }
-                            }
-                        }
-                    }
+                } catch (err) {
+                    console.log(`❌ Failed to add: ${item.name}`);
+                    failedItems.push(item);
                 }
             }
         }
