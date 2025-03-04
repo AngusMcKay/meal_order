@@ -219,30 +219,48 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                 let productUrl = `https://groceries.morrisons.com/products/${retailerProductId}`;
                 console.log(`Opening: ${productUrl}`);
 
-                try {
+                try { // Must be a better way to do this?
                     await driver.get(productUrl);
 
                     // First try
                     //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name} to basket']`));
-                    let addButton = await driver.wait(
-                        until.elementLocated(By.xpath(`//button[@aria-label='Add ${item.name} to basket']`)),
-                        5000
-                    );
+                    let addButton = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Add ${item.name} to basket']`)), 5000);
                     await addButton.click();
                     console.log(`✅ Added: ${item.name}`);
                 } catch (err1) {
                     try {
                         // Second try with extra space
                         //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
-                        let addButtonAlt = await driver.wait(
-                            until.elementLocated(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`)),
-                            5000
-                        );
+                        let addButtonAlt = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`)), 5000);
                         await addButtonAlt.click();
                         console.log(`✅ Added (alt): ${item.name}`);
                     } catch (err2) {
-                        console.log(`❌ Failed to add: ${item.name}`);
-                        failedItems.push(item);
+                        try {
+                            // Third try with increase instead of add
+                            //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
+                            let incButton = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Increase quantity of ${item.name} in trolley']`)), 5000);
+                            await incButton.click();
+                            console.log(`✅ Increased: ${item.name}`);
+                        } catch (err3) {
+                            try {
+                                // Fourth try with increase with extra space
+                                //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
+                                let incButtonAlt = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Increase quantity of ${item.name}  in trolley']`)), 5000);
+                                await incButtonAlt.click();
+                                console.log(`✅ Increased (alt): ${item.name}`);
+                            } catch (err4) {
+                                try {
+                                    // Fifth try with increase with extra space
+                                    //let addButton = await driver.findElement(By.xpath(`//button[@aria-label='Add ${item.name}  to basket']`));
+                                    let incButtonAlt2 = await driver.wait(until.elementLocated(By.xpath(`//button[@aria-label='Increase quantity of ${item.name}   in trolley']`)), 5000);
+                                    await incButtonAlt2.click();
+                                    console.log(`✅ Increased (alt2): ${item.name}`);
+                                } catch (err5) {
+                                    console.log(`❌ Failed to add: ${item.name}`);
+                                    failedItems.push(item);
+                                }
+                            }
+                        }
                     }
                 }
             }
