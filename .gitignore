@@ -4,3 +4,5 @@
 *.pickle
 *pycache*
 config.py
+*.env
+*.json

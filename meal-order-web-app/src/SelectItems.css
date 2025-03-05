@@ -143,3 +143,12 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.external-search-link {
+    color: blue;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 10px;
+    z-index: 1;
+}
+

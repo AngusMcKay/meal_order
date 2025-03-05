@@ -18,6 +18,24 @@ async function testSelenium() {
     }
 };
 
+async function getCookiesFromManualLogin() {
+    // Set up WebDriver for Chrome
+    let driver = await new Builder().forBrowser('chrome').build();
+
+    try {
+        // Open a website
+        await driver.get('https://example.com');
+
+        // Get and print the page title
+        let title = await driver.getTitle();
+        console.log("Page Title:", title);
+
+    } finally {
+        // Close the browser
+        await driver.quit();
+    }
+};
+
 async function loadBasketTemplate() {
     let driver = await new Builder().forBrowser('chrome').build();
 

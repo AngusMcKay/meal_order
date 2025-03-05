@@ -45,12 +45,14 @@ app.get("/meals", async (req, res) => {
 });
 
 // Define Item schema and model
-const ItemSchema = new mongoose.Schema({ // TO DO
-    name: String,
-    items: [String]
-});
+const ItemSchema = new mongoose.Schema(
+    {
+        retailerProductId: String
+    },
+    { strict: false } // Might want to think about this more at some point
+);
 
-const Item = mongoose.model("Item", {});  // NEED TO REPLACE WITH ACTUAL SCHEMA ONCE SET UP
+const Item = mongoose.model("Item", ItemSchema);
 
 // API to fetch meals
 app.get("/items", async (req, res) => {
@@ -64,8 +66,77 @@ app.get("/items", async (req, res) => {
     }
 });
 
+app.post("/find-new-items", async (req, res) => {
+    const { query } = req.body;
+
+    try {
+
+        // PUPPETEER VERSION
+        /*const browser = await puppeteer.launch({ headless: true });
+        const page = await browser.newPage();
+
+        await page.goto(`https://groceries.morrisons.com/search?q=${query}`, { waitUntil: "domcontentloaded" });
+
+        let pageSource = await page.content();
+        let jsonData = pageSource.split('"productEntities":')[1].split(',"missedPromotions"')[0];
+        let itemsDict = JSON.parse(jsonData);
+
+        //let results = itemsDict.map(item => ({ name: item.name }));
+
+        await browser.close();
+        res.json(itemsDict);*/
+
+        // SELENIUM VERSION
+        let chrome = require("selenium-webdriver/chrome");
+        let options = new chrome.Options();
+        options.addArguments("--headless"); // Runs Chrome in headless mode
+        options.addArguments("--disable-gpu"); // Disables GPU hardware acceleration
+        options.addArguments("--window-size=1280,800"); // Ensures consistent rendering
+        let driver = await new Builder().forBrowser("chrome").setChromeOptions(options).build();
+        //let driver = await new Builder().forBrowser("chrome").build();
+        await driver.get(`https://groceries.morrisons.com/search?q=${query}`);
+
+        // Extract page source
+        let pageSource = await driver.getPageSource();
+
+        // Extract JSON containing product entities
+        let jsonData = pageSource.split('"productEntities":')[1].split(',"missedPromotions"')[0];
+
+        // Parse JSON
+        let itemsDict = JSON.parse(jsonData);
+
+        await driver.quit();
+        res.json(itemsDict);
+
+    } catch (error) {
+        console.error("Scraping failed:", error);
+        res.status(500).json({ error: "Failed to scrape data." });
+    }
+});
+
+app.post("/add-new-items", async (req, res) => {
+    try {
+        const { items } = req.body;
+
+        const bulkOps = items.map(item => ({
+            updateOne: {
+                filter: { retailerProductId: item.retailerProductId },
+                update: { $set: item },
+                upsert: true
+            }
+        }));
+
+        await Item.bulkWrite(bulkOps);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Error adding to database:", error);
+        res.status(500).json({ error: "Failed to save items." });
+    }
+});
+
 // Upsert created or edited meals
-app.post("/upsertMeal", async (req, res) => {
+app.post("/upsert-meal", async (req, res) => {
     const { name, items, recipe } = req.body;
 
     if (!name) {

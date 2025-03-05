@@ -24,6 +24,8 @@ const CreateMeals = () => {
     const [loading, setLoading] = useState(true);
     const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);
     const [recipeLink, setRecipeLink] = useState("");
+    const [showPopup, setShowPopup] = useState(false);
+    const [externalResults, setExternalResults] = useState([]);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -132,7 +134,7 @@ const CreateMeals = () => {
             return;
         }
         try {
-            const response = await fetch("http://localhost:5000/upsertMeal", {
+            const response = await fetch("http://localhost:5000/upsert-meal", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -175,6 +177,54 @@ const CreateMeals = () => {
             }).filter(order => order.items.length > 0);
             return updatedOrders;
         });
+    };
+
+    const findNewItems = async (searchTerm) => {
+        try {
+            const response = await fetch("http://localhost:5000/find-new-items", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: searchTerm }),
+            });
+
+            const data = await response.json();
+
+            const itemsArray = Object.values(data);
+            setExternalResults(itemsArray);
+        } catch (error) {
+            console.error("Error scraping items:", error);
+        }
+    };
+
+    const addNewItems = async () => {
+        try {
+            await fetch("http://localhost:5000/add-new-items", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items: externalResults }),
+            });
+
+            setItems((prevItems) => {
+                const updatedItems = [...prevItems]; // copy existing
+
+                externalResults.forEach(newItem => {
+                    const index = updatedItems.findIndex(item => item.retailerProductId === newItem.retailerProductId);
+
+                    if (index !== -1) {
+                        updatedItems[index] = newItem;
+                    } else {
+                        updatedItems.push(newItem);
+                    }
+                });
+
+                return updatedItems;
+            });
+
+            setExternalResults([]);
+            setShowPopup(false); // Close pop-up after adding
+        } catch (error) {
+            console.error("Error adding items:", error);
+        }
     };
 
     return (
@@ -282,6 +332,9 @@ const CreateMeals = () => {
                                         value={search} 
                                         onChange={(e) => setSearch(e.target.value)}
                                     />
+                                    <span className="external-search-link-create" onClick={() => setShowPopup(true)}>
+                                        Can't find what you're looking for?
+                                    </span>
                                     {loading ? (
                                         <div className="loading-message-create">Finding items...<div className="loading-spinner"></div></div>
                                     ) : (
@@ -337,6 +390,52 @@ const CreateMeals = () => {
                         <button className="export-order-button" onClick={() => loadBasketMorrisons(orderList)}>Export Order</button>
                     </div>
                 </>
+            )}
+
+            {/* POPUP */}
+            {showPopup && (
+                <div className="popup-overlay">
+                    <div className="popup-content">
+                        <span className="popup-close-button" onClick={() => setShowPopup(false)}>✖</span>
+                        <h2>Search External Store</h2>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="popup-search-bar"
+                        />
+                        <button className="popup-search-button" onClick={() => findNewItems(search)}>
+                            Search External Store
+                        </button>
+
+                        {externalResults.length > 0 ? (
+                            <>
+                                <button className="popup-add-items-db-button" onClick={addNewItems}>
+                                    Add Items to Database
+                                </button>
+                                <div className="items-list">
+                                    {externalResults.map((item, index) => (
+                                        <div key={index} className="item">
+                                            <span className="item-text-select-items">
+                                                {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
+                                                <sup>
+                                                    <a 
+                                                        href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="item-link"
+                                                    >view ⎘</a>
+                                                </sup>
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <p></p>
+                        )}
+                    </div>
+                </div>
             )}
 
         </div>
