@@ -58,7 +58,7 @@
     width: 40%;
     padding: 10px;
     font-size: 20px;
-    border: 2px solid #3498db;
+    border: 1px solid #444;
     border-radius: 8px;
     background-color: #fff;
     color: #333;
@@ -66,6 +66,7 @@
     cursor: text;
     transition: border-color 0.3s ease-in-out;
     z-index: 1;
+    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
 }
 
 .meal-dropdown:hover,

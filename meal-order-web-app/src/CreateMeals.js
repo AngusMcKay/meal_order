@@ -227,6 +227,11 @@ const CreateMeals = () => {
         }
     };
 
+    const popupClose = () => {
+        setExternalResults([]);
+        setShowPopup(false);
+    };
+
     return (
         <div className="create-meals-container">
             <ToastContainer />
@@ -396,17 +401,21 @@ const CreateMeals = () => {
             {showPopup && (
                 <div className="popup-overlay">
                     <div className="popup-content">
-                        <span className="popup-close-button" onClick={() => setShowPopup(false)}>✖</span>
-                        <h2>Search External Store</h2>
+                        <span className="popup-close-button" onClick={() => popupClose(false)}>✖</span>
+                        <h2 className="popup-title">Find More Items</h2>
+                        <div className="popup-description">Search for more items from grocery suppliers and add them to the app</div>
                         <input
                             type="text"
                             value={search}
+                            placeholder="Search for an item..." 
                             onChange={(e) => setSearch(e.target.value)}
                             className="popup-search-bar"
                         />
-                        <button className="popup-search-button" onClick={() => findNewItems(search)}>
-                            Search External Store
-                        </button>
+                        <div className="popup-controls">
+                            <button className="popup-search-button" onClick={() => findNewItems(search)}>
+                                Search External Store
+                            </button>
+                        </div>
 
                         {externalResults.length > 0 ? (
                             <>

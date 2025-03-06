@@ -106,6 +106,11 @@ const SelectItems = () => {
         }
     };
 
+    const popupClose = () => {
+        setExternalResults([]);
+        setShowPopup(false);
+    };
+
     return (
         <div className="items-container">
             <div className="top-section">
@@ -131,7 +136,7 @@ const SelectItems = () => {
                     Can't find what you're looking for?
                 </span>
                 <p className="items-description">
-                    Change the description below before adding items<br></br>to store them under different headings in the cart 
+                    Change the category below before adding items<br></br>to store them under different headings in the cart 
                 </p>
                 <input 
                     type="text" 
@@ -196,17 +201,21 @@ const SelectItems = () => {
             {showPopup && (
                 <div className="popup-overlay">
                     <div className="popup-content">
-                        <span className="popup-close-button" onClick={() => setShowPopup(false)}>✖</span>
-                        <h2>Search External Store</h2>
+                        <span className="popup-close-button" onClick={() => popupClose(false)}>✖</span>
+                        <h2 className="popup-title">Find more items</h2>
+                        <div className="popup-description">Search for more items from grocery suppliers and add them to the app</div>
                         <input
                             type="text"
                             value={search}
+                            placeholder="Search for an item..." 
                             onChange={(e) => setSearch(e.target.value)}
                             className="popup-search-bar"
                         />
-                        <button className="popup-search-button" onClick={() => findNewItems(search)}>
-                            Search External Store
-                        </button>
+                        <div className="popup-controls">
+                            <button className="popup-search-button" onClick={() => findNewItems(search)}>
+                                Search External Store
+                            </button>
+                        </div>
 
                         {externalResults.length > 0 ? (
                             <>
