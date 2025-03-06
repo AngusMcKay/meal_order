@@ -213,3 +213,11 @@
     animation: spin 1s linear infinite;
     margin: 20px auto;
 }
+
+.popup-description-fail {
+    flex: 1;
+    font-size: 18px;
+    color: #444;
+    margin-bottom: 10px;
+}
+

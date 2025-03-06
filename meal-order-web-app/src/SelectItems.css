@@ -67,6 +67,33 @@
     margin-right: 10px;
 }
 
+.select-item-category-title::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: grey;
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 15px;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 100;
+    transition: opacity 0.2s;
+}
+
+.select-item-category-title:hover::after {
+    visibility: visible;
+    opacity: 1;
+}
+
+.info-sign {
+    font-size: 20px;
+
+}
+
 .category-input {
     width: 400px;
     padding: 10px;

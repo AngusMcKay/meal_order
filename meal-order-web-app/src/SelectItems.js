@@ -17,6 +17,9 @@ const SelectItems = () => {
     const [externalResults, setExternalResults] = useState([]);
     const [popupLoading, setPopupLoading] = useState(false);
     const [searchCompleteStatement, setSearchCompleteStatement] = useState("");
+    const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
+    const [loadingBasket, setLoadingBasket] = useState(false);
+    const [failedItems, setFailedItems] = useState([]);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -119,6 +122,27 @@ const SelectItems = () => {
         setSearchCompleteStatement("");
     };
 
+    const loadBasket = async (orderList) => {
+        setFailedItems([]);
+        let orderFails = [];
+        try {
+            setLoadingBasketPopup(true);
+            setLoadingBasket(true);
+            orderFails = await loadBasketMorrisons(orderList);
+        } catch (error) {
+            console.error("Error exporting items:", error);
+        } finally {
+            setLoadingBasket(false);
+            setFailedItems(orderFails);
+        }
+    };
+
+    const basketPopupClose = () => {
+        setLoadingBasketPopup(false);
+        setLoadingBasket(false);
+        setFailedItems([]);
+    };
+
     return (
         <div className="items-container">
             <div className="top-section">
@@ -134,8 +158,8 @@ const SelectItems = () => {
                     Seach for and select individual items to add to order
                 </p>
                 <div className="select-item-category">
-                    <span className="select-item-category-title">
-                    Category: 
+                    <span className="select-item-category-title" data-tooltip="Any items added will be shown under this heading in the shopping trolley">
+                    <a className="info-sign">ⓘ</a> Category: 
                     </span>
                     <input 
                         type="text" 
@@ -204,7 +228,7 @@ const SelectItems = () => {
                         )}
                     </div>
                     <div className='cart-sidebar-bottom'>
-                        <button className="export-order-button" onClick={() => loadBasketMorrisons(orderList)}>Export Order</button>
+                        <button className="export-order-button" onClick={() => loadBasket(orderList)}>Export Order</button>
                     </div>
                 </>
             )}
@@ -213,7 +237,7 @@ const SelectItems = () => {
             {showPopup && (
                 <div className="popup-overlay">
                     <div className="popup-content">
-                        <span className="popup-close-button" onClick={() => popupClose(false)}>✖</span>
+                        <span className="popup-close-button" onClick={() => popupClose()}>✖</span>
                         <h2 className="popup-title">Find more items</h2>
                         <div className="popup-description">Search for more items from grocery suppliers and add them to the app</div>
                         <input
@@ -262,6 +286,47 @@ const SelectItems = () => {
                         ) : (
                             <p>{searchCompleteStatement}</p>
                         )}
+                    </div>
+                </div>
+            )}
+
+            { loadingBasketPopup && (
+                <div className="popup-overlay">
+                    <div className="popup-content">
+                        { loadingBasket ? (
+                            <div className="loading-message">Exporting shopping list to supplier, please wait it can take a few minutes...<div className="loading-spinner"></div></div>
+                        ) : (
+                            <>
+                                <span className="popup-close-button" onClick={() => basketPopupClose()}>✖</span>
+
+                                { failedItems.length > 0 ? (
+                                    <>
+                                        <div className="popup-description-fail">The following items failed to export to supplier, please check and add manually if need be</div>
+                                        <div className="popup-description-fail">When ready head over to https://groceries.morrisons.com to arrange delivery</div>
+                                        <div className="items-list">
+                                            {failedItems.map((item, index) => (
+                                                <div key={index} className="item">
+                                                    <span className="item-text-select-items">
+                                                        {item.name}
+                                                        <sup>
+                                                            <a 
+                                                                href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                className="item-link"
+                                                            >view ⎘</a>
+                                                        </sup>
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="popup-description">All items exported successfully, to arrange delivery head to https://groceries.morrisons.com</div>
+                                )}
+                            </>
+                        )}
+                        
                     </div>
                 </div>
             )}

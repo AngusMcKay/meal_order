@@ -18,11 +18,12 @@ export const loadBasketMorrisons = async (orderList) => {
         });
 
         const data = await response.json();
-        if (data.failedItems.length > 0) {
+        /*if (data.failedItems.length > 0) {  // now handled in popup
             alert(`Failed to add items: ${data.failedItems.map(i => i.name).join(", ")}`);
         } else {
             alert("All items added successfully!");
-        }
+        }*/
+        return data.failedItems;
     } catch (error) {
         console.error("Error running Selenium:", error);
     }
