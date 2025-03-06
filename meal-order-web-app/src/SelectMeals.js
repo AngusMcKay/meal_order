@@ -7,11 +7,13 @@ const SelectMeals = () => {
     const [mealsData, setMealsData] = useState([]);
     const [selectedMeal, setSelectedMeal] = useState("");
     const [selectedItems, setSelectedItems] = useState({});
+    const [recipe, setRecipe] = useState("");
     const [orderList, setOrderList] = useState(() => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
     const [cartVisible, setCartVisible] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -33,7 +35,8 @@ const SelectMeals = () => {
         const meal = mealsData.find((m) => m.name === mealName);
         if (meal) {
             setSelectedItems(meal.items.reduce((accumulator, item, index) => ({ ...accumulator, [index]: true }), {}));  // changed to idx
-            console.log(JSON.stringify(selectedItems))
+            setRecipe(meal.recipe);
+            console.log(JSON.stringify(selectedItems));
         }
     };
 
@@ -90,7 +93,16 @@ const SelectMeals = () => {
                         <option key={meal.name} value={meal.name}>{meal.name}</option>
                     ))}
                 </select>
+                {recipe && (
+                    <div className="select-meal-recipe-link" onMouseEnter={() => setShowPreview(true)} onMouseLeave={() => setShowPreview(false)}>
+                        <a href={recipe} target="_blank" rel="noopener noreferrer" className="recipe-link">
+                            View Recipe ⎘
+                        </a>
+                    </div>
+                )}
             </div>
+
+            
             
             {selectedMeal && (
                 <div className="items-list">

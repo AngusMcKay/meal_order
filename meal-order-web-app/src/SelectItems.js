@@ -15,6 +15,8 @@ const SelectItems = () => {
     const [loading, setLoading] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
     const [externalResults, setExternalResults] = useState([]);
+    const [popupLoading, setPopupLoading] = useState(false);
+    const [searchCompleteStatement, setSearchCompleteStatement] = useState("");
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -59,6 +61,8 @@ const SelectItems = () => {
     };
 
     const findNewItems = async (searchTerm) => {
+        setPopupLoading(true);
+        setSearchCompleteStatement("");
         try {
             const response = await fetch("http://localhost:5000/find-new-items", {
                 method: "POST",
@@ -72,6 +76,9 @@ const SelectItems = () => {
             setExternalResults(itemsArray);
         } catch (error) {
             console.error("Error scraping items:", error);
+        } finally {
+            setPopupLoading(false);
+            setSearchCompleteStatement("No items found"); // will only display if externalResults is length 0
         }
     };
 
@@ -109,6 +116,7 @@ const SelectItems = () => {
     const popupClose = () => {
         setExternalResults([]);
         setShowPopup(false);
+        setSearchCompleteStatement("");
     };
 
     return (
@@ -125,26 +133,30 @@ const SelectItems = () => {
                 <p className="items-description">
                     Seach for and select individual items to add to order
                 </p>
-                <input 
-                    className="search-bar" 
-                    type="text" 
-                    placeholder="Search for an item..." 
-                    value={search} 
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-                <span className="external-search-link" onClick={() => setShowPopup(true)}>
-                    Can't find what you're looking for?
-                </span>
-                <p className="items-description">
-                    Change the category below before adding items<br></br>to store them under different headings in the cart 
-                </p>
-                <input 
-                    type="text" 
-                    placeholder="Enter category name (optional)" 
-                    className="category-input" 
-                    value={customHeading} 
-                    onChange={(e) => setCustomHeading(e.target.value)}
-                />
+                <div className="select-item-category">
+                    <span className="select-item-category-title">
+                    Category: 
+                    </span>
+                    <input 
+                        type="text" 
+                        placeholder="Enter category name (optional)" 
+                        className="category-input" 
+                        value={customHeading} 
+                        onChange={(e) => setCustomHeading(e.target.value)}
+                    />
+                </div>
+                <div className="select-item-search">
+                    <input 
+                        className="search-bar" 
+                        type="text" 
+                        placeholder="Search for an item..." 
+                        value={search} 
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                    <div className="external-search-link" onClick={() => setShowPopup(true)}>
+                        Can't find what you're looking for?
+                    </div>
+                </div>
 
                 {loading ? (
                     <div className="loading-message">Finding items...<div className="loading-spinner"></div></div>
@@ -217,6 +229,13 @@ const SelectItems = () => {
                             </button>
                         </div>
 
+                        {popupLoading ? (
+                            <div className="loading-message">Searching for items...<div className="loading-spinner"></div></div>
+                        ) : (
+                            <>
+                            </>
+                        )}
+
                         {externalResults.length > 0 ? (
                             <>
                                 <button className="popup-add-items-db-button" onClick={addNewItems}>
@@ -241,7 +260,7 @@ const SelectItems = () => {
                                 </div>
                             </>
                         ) : (
-                            <p></p>
+                            <p>{searchCompleteStatement}</p>
                         )}
                     </div>
                 </div>

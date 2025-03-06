@@ -75,6 +75,16 @@
     border-color: #2980b9;
 }
 
+.select-meal-recipe-link {
+    margin-top: 10px;
+    z-index: 1;
+}
+
+.view-recipe-container {
+    position: relative;
+    display: inline-block;
+}
+
 /* Items List */
 .items-list {
     margin-top: 20px;

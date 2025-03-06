@@ -26,6 +26,8 @@ const CreateMeals = () => {
     const [recipeLink, setRecipeLink] = useState("");
     const [showPopup, setShowPopup] = useState(false);
     const [externalResults, setExternalResults] = useState([]);
+    const [popupLoading, setPopupLoading] = useState(false);
+    const [searchCompleteStatement, setSearchCompleteStatement] = useState("");
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -180,6 +182,8 @@ const CreateMeals = () => {
     };
 
     const findNewItems = async (searchTerm) => {
+        setPopupLoading(true);
+        setSearchCompleteStatement("");
         try {
             const response = await fetch("http://localhost:5000/find-new-items", {
                 method: "POST",
@@ -193,6 +197,9 @@ const CreateMeals = () => {
             setExternalResults(itemsArray);
         } catch (error) {
             console.error("Error scraping items:", error);
+        } finally {
+            setPopupLoading(false);
+            setSearchCompleteStatement("No items found"); // will only display if externalResults is length 0
         }
     };
 
@@ -219,9 +226,6 @@ const CreateMeals = () => {
 
                 return updatedItems;
             });
-
-            setExternalResults([]);
-            setShowPopup(false); // Close pop-up after adding
         } catch (error) {
             console.error("Error adding items:", error);
         }
@@ -230,6 +234,7 @@ const CreateMeals = () => {
     const popupClose = () => {
         setExternalResults([]);
         setShowPopup(false);
+        setSearchCompleteStatement("");
     };
 
     return (
@@ -417,6 +422,13 @@ const CreateMeals = () => {
                             </button>
                         </div>
 
+                        {popupLoading ? (
+                            <div className="loading-message">Searching for items...<div className="loading-spinner"></div></div>
+                        ) : (
+                            <>
+                            </>
+                        )}
+
                         {externalResults.length > 0 ? (
                             <>
                                 <button className="popup-add-items-db-button" onClick={addNewItems}>
@@ -441,7 +453,7 @@ const CreateMeals = () => {
                                 </div>
                             </>
                         ) : (
-                            <p></p>
+                            <p>{searchCompleteStatement}</p>
                         )}
                     </div>
                 </div>
