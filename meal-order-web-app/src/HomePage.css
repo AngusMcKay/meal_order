@@ -36,8 +36,8 @@
     background: white;
     padding: 10px 15px;
     border: solid;
-    border-color: #245682;
-    border-width: 2px;
+    border-color: #444;
+    border-width: 1px;
     cursor: pointer;
     border-radius: 10px;
     font-size: 20px;
@@ -45,6 +45,7 @@
     margin-left: 4px;
     margin-right: 4px;
     z-index: 1;
+    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
 }
 
 .title {

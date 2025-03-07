@@ -4,7 +4,7 @@ import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
-
+import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 const CreateMeals = () => {
     const [meals, setMeals] = useState([]);
@@ -28,6 +28,11 @@ const CreateMeals = () => {
     const [externalResults, setExternalResults] = useState([]);
     const [popupLoading, setPopupLoading] = useState(false);
     const [searchCompleteStatement, setSearchCompleteStatement] = useState("");
+    const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
+    const [loadingBasket, setLoadingBasket] = useState(false);
+    const [failedItems, setFailedItems] = useState([]);
+    const [showDeletePopup, setShowDeletePopup] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -163,6 +168,33 @@ const CreateMeals = () => {
         localStorage.setItem("orderList", JSON.stringify([...orderList, { meal: selectedMeal, items: mealItems }]));
     };
 
+    const handleDeleteMeal = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/meals/${encodeURIComponent(selectedMeal)}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                if (data.message === "Meal not found") {
+                    console.log("Meal was not saved in the database, but has been removed from this session.");
+                } else {
+                    throw new Error("Failed to delete meal");
+                }
+            }
+
+            // Remove meal from state
+            setMeals(meals.filter(m => m.name !== selectedMeal));
+
+            // Reset to initial view
+            setShowDeletePopup(false);
+            setDeleteConfirmation(true);
+        } catch (error) {
+            console.error("Error deleting meal:", error);
+            alert("Failed to delete meal. Please try again.");
+        }
+    };
+
     const handleGoBack = () => {
         setEditingMode(false);
         setSelectedMeal(null);
@@ -228,6 +260,10 @@ const CreateMeals = () => {
             });
         } catch (error) {
             console.error("Error adding items:", error);
+        } finally {
+            setShowPopup(false);
+            setExternalResults([]);
+            setSearchCompleteStatement("");
         }
     };
 
@@ -235,6 +271,27 @@ const CreateMeals = () => {
         setExternalResults([]);
         setShowPopup(false);
         setSearchCompleteStatement("");
+    };
+
+    const loadBasket = async (orderList) => {
+        setFailedItems([]);
+        let orderFails = [];
+        try {
+            setLoadingBasketPopup(true);
+            setLoadingBasket(true);
+            orderFails = await loadBasketMorrisons(orderList);
+        } catch (error) {
+            console.error("Error exporting items:", error);
+        } finally {
+            setLoadingBasket(false);
+            setFailedItems(orderFails);
+        }
+    };
+
+    const basketPopupClose = () => {
+        setLoadingBasketPopup(false);
+        setLoadingBasket(false);
+        setFailedItems([]);
     };
 
     return (
@@ -293,6 +350,7 @@ const CreateMeals = () => {
                         <div className="edit-controls">
                             <button className="save-button" onClick={handleStoreMeal}>Save</button>
                             <button className="create-add-order" onClick={handleAddMealToOrder}>Add to Order</button>
+                            <button className="delete-meal-button" onClick={() => setShowDeletePopup(true)}>Delete</button>
                             <button className="go-back-button" onClick={handleGoBack}>Back</button>
                             <select className="change-meal-dropdown" value="" onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
                                 <option value="" disabled>Change meal</option>
@@ -301,6 +359,30 @@ const CreateMeals = () => {
                                 ))}
                             </select>
                         </div>
+                        {showDeletePopup && (
+                            <div className="delete-popup-overlay">
+                                <div className="delete-popup">
+                                    <h3>Are you sure you want to delete this meal?</h3>
+                                    <p>This action cannot be undone</p>
+                                    <div className="delete-popup-buttons">
+                                        <button className="confirm-delete" onClick={handleDeleteMeal}>Yes, Delete</button>
+                                        <button className="cancel-delete" onClick={() => setShowDeletePopup(false)}>Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {deleteConfirmation && (
+                            <div className="confirm-delete-overlay">
+                                <div className="delete-confirmation-popup">
+                                    <p>Meal deleted</p>
+                                    <button onClick={() => {
+                                        setDeleteConfirmation(false);
+                                        setSelectedMeal(null);
+                                        setEditingMode(false);
+                                    }}>Close</button>
+                                </div>
+                            </div>
+                        )}
                         <div className="recipe-link-container">
                             <p htmlFor="recipe-link">Recipe Link:</p>
                             <input 
@@ -376,30 +458,23 @@ const CreateMeals = () => {
             </div>
 
             {cartVisible && (
-                <>
-                    <div className="cart-sidebar">
-                        <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
-                        <h2 className="cart-title">Shopping List</h2>
-                        {orderList.length > 0 ? (
-                            orderList.map((order, mealIndex) => (
-                                <div key={mealIndex} className="cart-meal">
-                                    <strong>{order.meal}</strong>
-                                    {order.items.map((item, itemIndex) => (
-                                        <div key={itemIndex} className="cart-item">
-                                            <span className="cart-item-text">{item.name}</span>
-                                            <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))
-                        ) : (
-                            <p>No items in the cart.</p>
-                        )}
-                    </div>
-                    <div className='cart-sidebar-bottom'>
-                        <button className="export-order-button" onClick={() => loadBasketMorrisons(orderList)}>Export Order</button>
-                    </div>
-                </>
+                <CartSidebar 
+                    cartVisible={cartVisible} 
+                    setCartVisible={setCartVisible} 
+                    orderList={orderList} 
+                    removeCartItem={removeCartItem}
+                    loadBasket={loadBasket}
+                />
+            )}
+
+            { loadingBasketPopup && (
+                <LoadingBasketPopup 
+                    loadingBasketPopup={loadingBasketPopup} 
+                    loadingBasket={loadingBasket} 
+                    setLoadingBasket={setLoadingBasket} 
+                    basketPopupClose={basketPopupClose}
+                    failedItems={failedItems}
+                />
             )}
 
             {/* POPUP */}

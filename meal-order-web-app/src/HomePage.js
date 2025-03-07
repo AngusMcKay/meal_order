@@ -4,6 +4,7 @@ import { Tooltip } from "@mui/material";
 import "./HomePage.css";
 import "./Generic.css";
 import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
+import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -12,6 +13,9 @@ const HomePage = () => {
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
     const [cartVisible, setCartVisible] = useState(false);
+    const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
+    const [loadingBasket, setLoadingBasket] = useState(false);
+    const [failedItems, setFailedItems] = useState([]);
 
     const removeCartItem = (mealIndex, itemIndex) => {
         setOrderList((prevOrders) => {
@@ -24,6 +28,27 @@ const HomePage = () => {
             return updatedOrders;
         });
     }
+
+    const loadBasket = async (orderList) => {
+        setFailedItems([]);
+        let orderFails = [];
+        try {
+            setLoadingBasketPopup(true);
+            setLoadingBasket(true);
+            orderFails = await loadBasketMorrisons(orderList);
+        } catch (error) {
+            console.error("Error exporting items:", error);
+        } finally {
+            setLoadingBasket(false);
+            setFailedItems(orderFails);
+        }
+    };
+
+    const basketPopupClose = () => {
+        setLoadingBasketPopup(false);
+        setLoadingBasket(false);
+        setFailedItems([]);
+    };
 
     return (
         <div className="container">
@@ -51,30 +76,23 @@ const HomePage = () => {
             </div>
 
             {cartVisible && (
-                <>
-                    <div className="cart-sidebar">
-                        <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
-                        <h2 className="cart-title">Shopping List</h2>
-                        {orderList.length > 0 ? (
-                            orderList.map((order, mealIndex) => (
-                                <div key={mealIndex} className="cart-meal">
-                                    <strong>{order.meal}</strong>
-                                    {order.items.map((item, itemIndex) => (
-                                        <div key={itemIndex} className="cart-item">
-                                            <span className="cart-item-text">{item.name}</span>
-                                            <span className="remove-cart-item" onClick={() => removeCartItem(mealIndex, itemIndex)}>✖</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))
-                        ) : (
-                            <p>No items in the cart.</p>
-                        )}
-                    </div>
-                    <div className='cart-sidebar-bottom'>
-                        <button className="export-order-button" onClick={() => loadBasketMorrisons(orderList)}>Export Order</button>
-                    </div>
-                </>
+                <CartSidebar 
+                    cartVisible={cartVisible} 
+                    setCartVisible={setCartVisible} 
+                    orderList={orderList} 
+                    removeCartItem={removeCartItem}
+                    loadBasket={loadBasket}
+                />
+            )}
+
+            { loadingBasketPopup && (
+                <LoadingBasketPopup 
+                    loadingBasketPopup={loadingBasketPopup} 
+                    loadingBasket={loadingBasket} 
+                    setLoadingBasket={setLoadingBasket} 
+                    basketPopupClose={basketPopupClose}
+                    failedItems={failedItems}
+                />
             )}
         </div>
     );
