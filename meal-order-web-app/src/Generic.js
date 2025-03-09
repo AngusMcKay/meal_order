@@ -30,12 +30,15 @@ export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCart
     );
 };
 
-export const LoadingBasketPopup = ({ loadingBasketPopup, loadingBasket, setLoadingBasket, basketPopupClose, failedItems }) => {
+export const LoadingBasketPopup = ({ loadingBasketPopup, loadingBasket, setLoadingBasket, basketPopupClose, failedItems, orderProgress }) => {
 	return (
 		<div className={`popup-overlay ${loadingBasketPopup ? "visible" : ""}`}>
             <div className="popup-content">
                 { loadingBasket ? (
-                    <div className="loading-message">Exporting shopping list to supplier, please wait it can take a few minutes...<div className="loading-spinner"></div></div>
+                	<>
+	                    <div className="loading-message">Exporting shopping list to supplier, please wait it can take a few minutes...<div className="loading-spinner"></div></div>
+	                    <div className="order-progress">{orderProgress}</div>
+	                </>
                 ) : (
                     <>
                         <span className="popup-close-button" onClick={() => basketPopupClose()}>✖</span>

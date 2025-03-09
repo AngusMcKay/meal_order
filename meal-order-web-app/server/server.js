@@ -5,11 +5,24 @@ const cors = require("cors");
 const { Builder, By, Key, until } = require("selenium-webdriver");
 const fs = require("fs");
 
-
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// socket.io setup for posting updates to front end
+const http = require("http");
+const { Server } = require("socket.io");
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+
+io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
+});
 
 // Check if MongoDB URI is properly loaded
 if (!process.env.MONGO_URI) {
@@ -192,7 +205,6 @@ app.post("/run-selenium-test", async (req, res) => {
     }
 });
 
-
 // Selenium orders
 app.post("/run-selenium-morrisons-order", async (req, res) => {
     const orderList = req.body.orderList; // Receive orderList from frontend
@@ -208,6 +220,8 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     options.addArguments("--window-size=1280,800"); // Ensures consistent rendering
     driver = await new Builder().forBrowser("chrome").setChromeOptions(options).build();
     //driver = await new Builder().forBrowser("chrome").build();  // Headed driver (useful for testing)
+
+    io.emit("orderProgress", "Connecting to grocery store");
 
     // First open page and accept cookies
     let logged_in = false;
@@ -259,6 +273,7 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     // Handle login and save cookies if no existing cookies or expired
     if (!logged_in) {
         console.log('Starting manual log in');
+        io.emit("orderProgress", "Please log in on the popup manually");
         let driver_login = await new Builder().forBrowser("chrome").build(); // Headed driver for user login
         let saved_cookies = [];
 
@@ -297,7 +312,6 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     
     // Headless driver should now be logged in, so continue to place order
     let failedItems = [];
-
     // Place order
     try {
 
@@ -307,6 +321,7 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                 let retailerProductId = item.retailerProductId;
                 let productUrl = `https://groceries.morrisons.com/products/${retailerProductId}`;
                 console.log(`Opening: ${productUrl}`);
+                io.emit("orderProgress", `Looking for ${item.name}`);
 
                 try { // Must be a better way to do this?
                     await driver.get(productUrl);
@@ -321,8 +336,10 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                         `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);
                     await addButton.click();
                     console.log(`✅ Added: ${item.name}`);
+                    io.emit("orderProgress", `${item.name} added`);
                 } catch (err) {
                     console.log(`❌ Failed to add: ${item.name}`);
+                    io.emit("orderProgress", `Unable to add ${item.name}, added to fail list (viewable after)`);
                     failedItems.push(item);
                 }
             }
@@ -330,6 +347,7 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     } catch (error) {
         console.error("Error processing order list:", error);
     } finally {
+        io.emit("orderComplete", ""); // blanks last message to remove messages
         await driver.get('https://groceries.morrisons.com/'); // final call to go back to home page ensures last item gets added before quiting driver
         await driver.quit();
     }
