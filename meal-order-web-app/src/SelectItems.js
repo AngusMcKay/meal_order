@@ -4,6 +4,13 @@ import "./Generic.css";
 import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
+// Set up socket.io for order progress updates
+import io from "socket.io-client";
+const socket = io("http://localhost:5000", { transports: ["websocket"] });
+socket.on("connect", () => {
+    console.log("🟢 Connected to Socket.IO server");
+});
+
 const SelectItems = () => {
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
@@ -21,6 +28,22 @@ const SelectItems = () => {
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
+
+    const [orderProgress, setOrderProgress] = useState("");
+    useEffect(() => {
+        socket.on("orderProgress", (message) => {
+            setOrderProgress(message);
+        });
+
+        socket.on("orderComplete", (message) => {
+            setOrderProgress("");
+        });
+
+        return () => {
+            socket.off("orderProgress");
+            socket.off("orderComplete");
+        };
+    }, []);
 
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
@@ -281,6 +304,7 @@ const SelectItems = () => {
                     setLoadingBasket={setLoadingBasket} 
                     basketPopupClose={basketPopupClose}
                     failedItems={failedItems}
+                    orderProgress={orderProgress}
                 />
             )}
 

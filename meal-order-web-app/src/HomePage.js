@@ -5,9 +5,13 @@ import "./HomePage.css";
 import "./Generic.css";
 import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
-import io from "socket.io-client";
 
-//const socket = io("http://localhost:5000");
+// Set up socket.io for order progress updates
+import io from "socket.io-client";
+const socket = io("http://localhost:5000", { transports: ["websocket"] });
+socket.on("connect", () => {
+    console.log("🟢 Connected to Socket.IO server");
+});
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -19,22 +23,22 @@ const HomePage = () => {
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
+    
     const [orderProgress, setOrderProgress] = useState("");
-
-    /*useEffect(() => {
+    useEffect(() => {
         socket.on("orderProgress", (message) => {
             setOrderProgress(message);
         });
 
         socket.on("orderComplete", (message) => {
-            setOrderProgress("");
+            setOrderProgress(message);
         });
 
         return () => {
             socket.off("orderProgress");
             socket.off("orderComplete");
         };
-    }, []);*/
+    }, []);
 
     const removeCartItem = (mealIndex, itemIndex) => {
         setOrderList((prevOrders) => {
@@ -49,7 +53,6 @@ const HomePage = () => {
     }
 
     const loadBasket = async (orderList) => {
-        console.log(orderList)
         setFailedItems([]);
         let orderFails = [];
         try {
@@ -97,19 +100,19 @@ const HomePage = () => {
 
             {cartVisible && (
                 <CartSidebar 
-                    cartVisible={cartVisible} 
-                    setCartVisible={setCartVisible} 
-                    orderList={orderList} 
+                    cartVisible={cartVisible}
+                    setCartVisible={setCartVisible}
+                    orderList={orderList}
                     removeCartItem={removeCartItem}
                     loadBasket={loadBasket}
                 />
             )}
 
             { loadingBasketPopup && (
-                <LoadingBasketPopup 
-                    loadingBasketPopup={loadingBasketPopup} 
-                    loadingBasket={loadingBasket} 
-                    setLoadingBasket={setLoadingBasket} 
+                <LoadingBasketPopup
+                    loadingBasketPopup={loadingBasketPopup}
+                    loadingBasket={loadingBasket}
+                    setLoadingBasket={setLoadingBasket}
                     basketPopupClose={basketPopupClose}
                     failedItems={failedItems}
                     orderProgress={orderProgress}

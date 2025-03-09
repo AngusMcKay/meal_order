@@ -6,7 +6,7 @@ const { Builder, By, Key, until } = require("selenium-webdriver");
 const fs = require("fs");
 
 const app = express();
-app.use(cors());
+app.use(cors({origin: "http://localhost:3000", methods: ["GET", "POST"], credentials: true})); // Important for cookies/sessions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
@@ -235,7 +235,6 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
 
         // Check for cookies from previous login and apply
         if (fs.existsSync("saved_cookies_morrisons.json")) {
-
             console.log("Existing cookies found, applying and confirming log in status");
             let saved_cookies = JSON.parse(fs.readFileSync("saved_cookies_morrisons.json"));
             // Add cookies from previous logged in session (note that site needs to be opened before cookies can be applied)
@@ -321,10 +320,10 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                 let retailerProductId = item.retailerProductId;
                 let productUrl = `https://groceries.morrisons.com/products/${retailerProductId}`;
                 console.log(`Opening: ${productUrl}`);
-                io.emit("orderProgress", `Looking for ${item.name}`);
 
                 try { // Must be a better way to do this?
                     await driver.get(productUrl);
+                    io.emit("orderProgress", `Finding and adding ${item.name}...    `);
                     let a1 = `@aria-label='Add ${item.name} to basket'`
                     let a2 = `@aria-label='Add ${item.name}  to basket'`
                     let a3 = `@aria-label='Add ${item.name}   to basket'`
@@ -336,10 +335,10 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                         `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);
                     await addButton.click();
                     console.log(`✅ Added: ${item.name}`);
-                    io.emit("orderProgress", `${item.name} added`);
+                    io.emit("orderProgress", `Finding and adding ${item.name} - DONE`);
                 } catch (err) {
                     console.log(`❌ Failed to add: ${item.name}`);
-                    io.emit("orderProgress", `Unable to add ${item.name}, added to fail list (viewable after)`);
+                    io.emit("orderProgress", `Couldn't add ${item.name}, added to fail list (viewable after)`);
                     failedItems.push(item);
                 }
             }
@@ -347,9 +346,10 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     } catch (error) {
         console.error("Error processing order list:", error);
     } finally {
-        io.emit("orderComplete", ""); // blanks last message to remove messages
+        io.emit("orderComplete", "Order Complete");
         await driver.get('https://groceries.morrisons.com/'); // final call to go back to home page ensures last item gets added before quiting driver
         await driver.quit();
+        io.emit("orderComplete", ""); // blanks last message to remove messages
     }
 
     res.json({ failedItems }); // Send failed items back to frontend
@@ -357,4 +357,6 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
 
 
 const PORT = 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+//app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

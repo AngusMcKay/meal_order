@@ -39,6 +39,16 @@
     color: #444;
 }
 
+.store-link {
+    text-decoration: none;
+    color: #6395EE;
+    font-weight: bold;
+}
+
+.store-link:hover {
+    color: #4682B4;
+}
+
 /* cart items */
 .cart-sidebar {
     position: fixed;
@@ -202,6 +212,17 @@
 
 .popup-search-button:hover, .popup-add-items-db-button:hover {
     background: darkgreen;
+}
+
+/* Loading spinner */
+.loading-message {
+    margin-top: 20px;
+    color: #444;
+}
+
+.order-progress {
+    margin-top: 20px;
+    color: #444;
 }
 
 .loading-spinner {

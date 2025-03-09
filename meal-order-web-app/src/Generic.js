@@ -66,7 +66,10 @@ export const LoadingBasketPopup = ({ loadingBasketPopup, loadingBasket, setLoadi
                                 </div>
                             </>
                         ) : (
-                            <div className="popup-description">All items exported successfully, to arrange delivery head to https://groceries.morrisons.com</div>
+                            <div className="popup-description">
+                            	All items exported successfully, to arrange delivery head to:
+                            	<a href='https://groceries.morrisons.com' target="_blank" rel="noopener noreferrer" className="store-link"> https://groceries.morrisons.com</a>
+                            </div>
                         )}
                     </>
                 )}
