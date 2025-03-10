@@ -182,7 +182,7 @@ const SelectItems = () => {
                     Seach for and select individual items to add to order
                 </p>
                 <div className="select-item-category">
-                    <span className="select-item-category-title" data-tooltip="Any items added will be shown under this heading in the shopping trolley">
+                    <span className="select-item-category-title" data-tooltip="Any items added will be shown under this heading in the shopping list">
                     <a className="info-sign">ⓘ</a> Category: 
                     </span>
                     <input 

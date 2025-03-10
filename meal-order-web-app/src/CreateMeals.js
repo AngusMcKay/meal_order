@@ -40,6 +40,9 @@ const CreateMeals = () => {
     const [failedItems, setFailedItems] = useState([]);
     const [showDeletePopup, setShowDeletePopup] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+    const [extractedIngredients, setExtractedIngredients] = useState([]);
+    const [extractIngredientsPopupOpen, setExtractIngredientsPopupOpen] = useState(false);
+    const [extractIngredientsLoading, setExtractIngredientsLoading] = useState(false);
 
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -317,6 +320,61 @@ const CreateMeals = () => {
         setFailedItems([]);
     };
 
+    // Meal auto generation
+    const extractIngredients = async (recipeUrl) => {
+        try {
+            setExtractIngredientsPopupOpen(true); // Open the confirmation popup
+            setExtractIngredientsLoading(true);
+            const itemNames = items.map(item => item.name);
+            const response = await fetch("http://localhost:5000/extract-ingredients", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ recipeUrl, itemNames }),
+            });
+
+            console.log(response.ok);
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch AI suggestions");
+            }
+
+            const data = await response.json();
+            setExtractIngredientsLoading(false);
+
+            // Map extracted ingredients to include full item details
+            const updatedIngredients = data.ingredients.map((ingredient) => {
+                if (ingredient.suggestedItem) {
+                    const matchedItem = items.find(
+                        (item) => item.name === ingredient.suggestedItem
+                    );
+
+                    return {
+                        ...ingredient,
+                        fullItem: matchedItem || null, // Add full item if found, otherwise null
+                    };
+                }
+                return ingredient;
+            });
+
+            setExtractedIngredients(updatedIngredients); // Store extracted ingredients
+        } catch (error) {
+            console.error("Failed to extract ingredients:", error);
+        }
+    };
+
+    const createMeal = async () => {
+        await extractedIngredients.forEach((ingredient) => handleAddItemToMeal(ingredient.fullItem))
+        setExtractIngredientsPopupOpen(false);
+        setExtractIngredientsLoading(false);
+        setExtractedIngredients([]);
+    };
+
+    const extractPopupClose = () => {
+        setExtractIngredientsPopupOpen(false);
+        setExtractIngredientsLoading(false);
+        setExtractedIngredients([]);
+    };
+
     return (
         <div className="create-meals-container">
             <ToastContainer />
@@ -416,6 +474,9 @@ const CreateMeals = () => {
                                 onChange={(e) => handleAddMealRecipe(e.target.value)} 
                                 className="recipe-link-input"
                             />
+                            <button title="Use AI to attempt to auto-populate meal item list from the recipe URL" className='auto-create-meal' onClick={() => extractIngredients(recipeLink)}>
+                            AI Auto Generate From Recipe ⓘ
+                            </button>
                         </div>
 
                         {selectedMeal && (
@@ -505,7 +566,7 @@ const CreateMeals = () => {
             {showPopup && (
                 <div className="popup-overlay">
                     <div className="popup-content">
-                        <span className="popup-close-button" onClick={() => popupClose(false)}>✖</span>
+                        <span className="popup-close-button" onClick={() => popupClose()}>✖</span>
                         <h2 className="popup-title">Find More Items</h2>
                         <div className="popup-description">Search for more items from grocery suppliers and add them to the app</div>
                         <input
@@ -554,6 +615,45 @@ const CreateMeals = () => {
                         ) : (
                             <p>{searchCompleteStatement}</p>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {extractIngredientsPopupOpen && (
+                <div className="popup-overlay">
+                    <div className="popup-content">
+                        <span className="popup-close-button" onClick={() => extractPopupClose()}>✖</span>
+                        <h3 className="popup-title">Suggested Items for Recipe</h3>
+                        {extractIngredientsLoading ? (
+                            <div className="loading-message">Reading recipe, decyphering ingredients and finding appropriate items, please be patient...<div className="loading-spinner"></div></div>
+                        ) : (
+                            <>
+                            </>
+                        )}
+                        
+                        <div className="items-list">
+                            {extractedIngredients.map((ingredient) => (
+                                <div className="item-extracted" key={ingredient.name}>
+                                    {ingredient.name}: {ingredient.fullItem ? (
+                                        <span>
+                                            {ingredient.fullItem.name}{ingredient.fullItem.size ? ` (${ingredient.fullItem.size.value})` : ""}{ingredient.fullItem.price ? `, £${ingredient.fullItem.price.current.amount}` : ""}
+                                            <sup>
+                                                <a 
+                                                    href={`https://groceries.morrisons.com/products/${ingredient.fullItem.retailerProductId}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="item-link"
+                                                >view ⎘</a>
+                                            </sup>
+                                        </span>
+                                    ) : (
+                                        <span className="warning">⚠️ No match found</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        <button className="extract-create-meal" onClick={() => createMeal()}>Add Items</button>
+                        <button className="extract-cancel" onClick={() => extractPopupClose()}>Cancel</button>
                     </div>
                 </div>
             )}

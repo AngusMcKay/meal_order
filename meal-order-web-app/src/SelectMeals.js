@@ -113,13 +113,6 @@ const SelectMeals = () => {
         setFailedItems([]);
     };
 
-    /* // Ignore favourites for now
-    const handleAddToFaves = () => {
-        console.log("Added to favourites:", selectedMeal);
-        alert(`Added to favourites: ${selectedMeal}\nContaining items: ${Object.keys(selectedItems).join(", ")}`);
-    };
-    */
-
     return (
         <div className="meal-container">
             <div className="top-section-meals"> 
@@ -172,10 +165,6 @@ const SelectMeals = () => {
                         </div>
                     ))}
                     <button className="add-order-button" onClick={handleAddToOrder}>Add To Order</button>
-                    {/*
-                    <br/>
-                    <button className="add-faves-button" onClick={handleAddToFaves}>Add To Favourites</button>
-                    */}
                 </div>
             )}
 

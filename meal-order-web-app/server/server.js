@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const { Builder, By, Key, until } = require("selenium-webdriver");
 const fs = require("fs");
+const axios = require("axios");
+const https = require('https');
 
 const app = express();
 app.use(cors({origin: "http://localhost:3000", methods: ["GET", "POST"], credentials: true})); // Important for cookies/sessions));
@@ -215,11 +217,11 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     // Start headless driver session - used to check valid login cookies and then place order
     let chrome = require("selenium-webdriver/chrome");
     let options = new chrome.Options();
-    options.addArguments("--headless"); // Runs Chrome in headless mode
+    options.addArguments("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36")
+    options.addArguments("--headless"); // Runs Chrome in headless mode (can comment out for testing)
     options.addArguments("--disable-gpu"); // Disables GPU hardware acceleration
-    options.addArguments("--window-size=1280,800"); // Ensures consistent rendering
+    options.addArguments("--window-size=1920,1080"); // Ensures consistent rendering
     driver = await new Builder().forBrowser("chrome").setChromeOptions(options).build();
-    //driver = await new Builder().forBrowser("chrome").build();  // Headed driver (useful for testing)
 
     io.emit("orderProgress", "Connecting to grocery store");
 
@@ -250,7 +252,7 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
 
             // Login detection method 1: check whether login dropdown still exists
             try {
-                driver.manage().setTimeouts({ implicit: 10000 }); // reduce for this test so doesn't take ages
+                driver.manage().setTimeouts({ implicit: 10000 });
                 //let loginButton = await driver.findElement(By.xpath('//button[@data-synthetics="login-dropdown-button"]'));
                 //await loginButton.click();
                 //console.log('Log in button found after cookies applied, so need to run through manual login again');
@@ -335,11 +337,19 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                         `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);
                     await addButton.click();
                     console.log(`✅ Added: ${item.name}`);
-                    io.emit("orderProgress", `Finding and adding ${item.name} - DONE`);
+                    io.emit("orderProgress", `Finding and adding ${item.name} - ✅`);
                 } catch (err) {
                     console.log(`❌ Failed to add: ${item.name}`);
+                    console.error('Error', err)
                     io.emit("orderProgress", `Couldn't add ${item.name}, added to fail list (viewable after)`);
                     failedItems.push(item);
+                    driver.takeScreenshot().then(
+                        function(image, error) {
+                            fs.writeFileSync(`failed_order_${retailerProductId}.png`, image, 'base64', function(error) {
+                                console.log(error);
+                            });
+                        }
+                    );
                 }
             }
         }
@@ -355,6 +365,76 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
     res.json({ failedItems }); // Send failed items back to frontend
 });
 
+// AI agent to interpret recipes into shopping lists
+const router = express.Router();
+
+app.post("/extract-ingredients", async (req, res) => {
+
+    try {
+        const { recipeUrl, itemNames } = req.body;
+
+        console.log("Constructing query")
+
+        /*const prompt = `
+        Extract the ingredients and quantities from the following recipe URL: ${recipeUrl}.
+        Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
+        Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
+        `;
+
+        // Call AI API (Example using OpenAI's GPT API)
+        const aiResponse = await axios.post("https://api.openai.com/v1/chat/completions", {
+            model: "gpt-4-turbo",
+            messages: [{ role: "system", content: prompt }],
+            temperature: 0.7
+        }, {
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+                "Content-Type": "application/json"
+            }
+        });*/
+
+
+        const prompt = `
+        Extract the ingredients and quantities from the website provided.
+        Return an array of objects with 'ingredient' and 'quantity'
+        `;
+
+        const params = {
+          "api_key": process.env.WEBSCRAPING_AI_KEY,
+          "url": `${recipeUrl}`,
+          "timeout": "10000",
+          "js": "true",
+          "js_timeout": "2000",
+          "question": prompt,
+          "format": "json"
+        };
+        const queryString = new URLSearchParams(params).toString();
+        const url = 'https://api.webscraping.ai/ai/question?' + queryString;
+
+        console.log("Sending to AI")
+
+        https.get(url, (resp) => {
+          let data = '';
+          resp.on('data', (chunk) => { data += chunk; });
+          resp.on('end', () => {
+            console.log(data);
+          });
+        }).on("error", (err) => {
+          console.log("Error: " + err.message);
+        });
+
+        // Extract AI response
+        //const extractedData = JSON.parse(aiResponse.data.choices[0].message.content);
+        //res.json({ ingredients: extractedData });
+
+        res.json({ ingredients: [{ name: "Cucumber", quantity: "1", suggestedItem: "Morrisons Whole Cucumber" }, { name: "Brussel Sprouts", quantity: "200g", suggestedItem: "Morrisons Prepared Sprouts" }] });  // FOR TESTING
+    } catch (error) {
+        console.error("Error extracting ingredients:", error);
+        res.status(500).json({ error: "Failed to extract ingredients" });
+    }
+});
+
+module.exports = router;
 
 const PORT = 5000;
 //app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

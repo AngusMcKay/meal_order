@@ -133,30 +133,16 @@
 
 .add-order-button {
     margin-top: 20px;
+    margin-bottom: 20px;
     padding: 15px 40px;
     font-size: 20px;
     font-weight: bold;
     border-radius: 10px;
     border: none;
-    color: white;
+    color: #245682;
     cursor: pointer;
     transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
-    background-color: #3b82f6;
-    background-color: #2563eb;
-}
-
-.add-faves-button {
-    margin-top: 10px;
-    padding: 15px 40px;
-    font-size: 20px;
-    font-weight: bold;
-    border-radius: 10px;
-    border: none;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
-    background-color: #10b981;
-    background-color: #059669;
+    background-color: #ffd166;
 }
 
 

@@ -45,8 +45,8 @@ export const LoadingBasketPopup = ({ loadingBasketPopup, loadingBasket, setLoadi
 
                         { failedItems.length > 0 ? (
                             <>
-                                <div className="popup-description-fail">The following items failed to export to supplier, please check and add manually if need be</div>
-                                <div className="popup-description-fail">When ready head over to https://groceries.morrisons.com to arrange delivery</div>
+                                <div className="popup-description-fail">⚠️ The following items failed to export to supplier, please check and add manually if need be</div>
+                                <div className="popup-description-fail">When ready head over to <a href='https://groceries.morrisons.com' target="_blank" rel="noopener noreferrer" className="store-link"> https://groceries.morrisons.com</a> to arrange delivery</div>
                                 <div className="items-list">
                                     {failedItems.map((item, index) => (
                                         <div key={index} className="item">
