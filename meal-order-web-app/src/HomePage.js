@@ -19,7 +19,10 @@ const HomePage = () => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
-    const [cartVisible, setCartVisible] = useState(false);
+    const [cartVisible, setCartVisible] = useState(() => {
+        const savedCartPosition = localStorage.getItem("cartVisible");
+        return savedCartPosition ? JSON.parse(savedCartPosition) : false;
+    });
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
@@ -39,6 +42,10 @@ const HomePage = () => {
             socket.off("orderComplete");
         };
     }, []);
+
+    useEffect(() => {
+        localStorage.setItem("cartVisible", JSON.stringify(cartVisible));
+    }, [cartVisible]);  
 
     const removeCartItem = (mealIndex, itemIndex) => {
         setOrderList((prevOrders) => {

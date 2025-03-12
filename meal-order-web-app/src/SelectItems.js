@@ -19,7 +19,10 @@ const SelectItems = () => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
-    const [cartVisible, setCartVisible] = useState(false);
+    const [cartVisible, setCartVisible] = useState(() => {
+        const savedCartPosition = localStorage.getItem("cartVisible");
+        return savedCartPosition ? JSON.parse(savedCartPosition) : false;
+    });
     const [loading, setLoading] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
     const [externalResults, setExternalResults] = useState([]);
@@ -48,6 +51,10 @@ const SelectItems = () => {
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
     }, [orderList]);
+
+    useEffect(() => {
+        localStorage.setItem("cartVisible", JSON.stringify(cartVisible));
+    }, [cartVisible]);  
 
     // Fetch items from backend
     useEffect(() => {

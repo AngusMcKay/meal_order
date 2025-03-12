@@ -20,7 +20,10 @@ const SelectMeals = () => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
-    const [cartVisible, setCartVisible] = useState(false);
+    const [cartVisible, setCartVisible] = useState(() => {
+        const savedCartPosition = localStorage.getItem("cartVisible");
+        return savedCartPosition ? JSON.parse(savedCartPosition) : false;
+    });
     const [showPreview, setShowPreview] = useState(false);
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
@@ -45,6 +48,10 @@ const SelectMeals = () => {
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
     }, [orderList]);
+
+    useEffect(() => {
+        localStorage.setItem("cartVisible", JSON.stringify(cartVisible));
+    }, [cartVisible]);  
     
     // Fetch meals from backend
     useEffect(() => {
@@ -71,13 +78,19 @@ const SelectMeals = () => {
         setSelectedItems((prev) => ({ ...prev, [itemIndex]: !prev[itemIndex] }));  // changed to idx
     };
 
+    const checkPlaceholderItem = (item) => { // function to check if an item is just a placeholder and not an actual grocery store item
+        if (item.type && item.type == 'placeholder') {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     const handleAddToOrder = () => {
-        const selectedOrder = mealsData.find((m) => m.name === selectedMeal).items.filter((item, index) => selectedItems[index]) // Object.keys(selectedItems).filter((item) => selectedItems[item]);
+        const selectedOrder = mealsData.find((m) => m.name === selectedMeal).items.filter((item, index) => selectedItems[index] && !checkPlaceholderItem(item)) // Object.keys(selectedItems).filter((item) => selectedItems[item]);
         if (selectedOrder.length > 0) {
             setOrderList((prevOrders) => [...prevOrders, { meal: selectedMeal, items: selectedOrder }]);
         }
-        // console.log("Added to order:", selectedOrder);  // removed as part of id add
-        // alert(`Added to order: ${selectedOrder.join(", ")}`);  // removed as part of id add
     };
 
     const removeCartItem = (mealIndex, itemIndex) => {
@@ -151,17 +164,28 @@ const SelectMeals = () => {
                         <div key={index} className="item">
                             <span className="item-text">
                                 {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
-                                <sup>
-                                    <a 
-                                        href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="item-link"
-                                    >view ⎘</a>
-                                </sup>
+                                { !checkPlaceholderItem(item) ? (
+                                    <sup>
+                                        <a 
+                                            href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="item-link"
+                                        >view ⎘</a>
+                                    </sup>
+                                ) : (
+                                    <>
+                                    </>
+                                )}
                             </span>
-                            <span className={selectedItems[index] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(index)}>✔</span>
-                            <span className={!selectedItems[index] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(index)}>✖</span>
+                            { !checkPlaceholderItem(item) ? (
+                                <>
+                                    <span className={selectedItems[index] ? "bold-green" : "faded-green"} onClick={() => toggleItemSelection(index)}>✔</span>
+                                    <span className={!selectedItems[index] ? "bold-red" : "faded-red"} onClick={() => toggleItemSelection(index)}>✖</span>
+                                </>
+                            ) : (
+                                <span className="faded-red-info" title="Placeholder Item: These items are not specific items available from the grocery store and so will not be added to cart. These need to be added/bought manually directly from the grocery store. Update the meal on the Create Meals page if you want to replace the placeholder with an item that can be automatically included in the order." data-toggle="tooltip">ⓘ</span>
+                            )}
                         </div>
                     ))}
                     <button className="add-order-button" onClick={handleAddToOrder}>Add To Order</button>

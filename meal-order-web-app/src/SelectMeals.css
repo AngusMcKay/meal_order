@@ -131,6 +131,8 @@
 .bold-red:hover { transform: scale(1.2); }
 .faded-red:hover { transform: scale(1.2); }
 
+.faded-red-info { color: rgba(255, 0, 0, 0.3); cursor: help; font-size: 24px; margin-left: 10px; }
+
 .add-order-button {
     margin-top: 20px;
     margin-bottom: 20px;

@@ -26,7 +26,10 @@ const CreateMeals = () => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
     });
-    const [cartVisible, setCartVisible] = useState(false);
+    const [cartVisible, setCartVisible] = useState(() => {
+        const savedCartPosition = localStorage.getItem("cartVisible");
+        return savedCartPosition ? JSON.parse(savedCartPosition) : false;
+    });
     const [editingMode, setEditingMode] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);
@@ -42,7 +45,10 @@ const CreateMeals = () => {
     const [deleteConfirmation, setDeleteConfirmation] = useState(false);
     const [extractedIngredients, setExtractedIngredients] = useState([]);
     const [extractIngredientsPopupOpen, setExtractIngredientsPopupOpen] = useState(false);
+    const [extractIngredientsInputs, setExtractIngredientsInputs] = useState(false);
     const [extractIngredientsLoading, setExtractIngredientsLoading] = useState(false);
+    const [recipeText, setRecipeText] = useState("");
+    const [imageFile, setImageFile] = useState(null);
 
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -63,6 +69,10 @@ const CreateMeals = () => {
     useEffect(() => {
         localStorage.setItem("orderList", JSON.stringify(orderList));
     }, [orderList]);
+
+    useEffect(() => {
+        localStorage.setItem("cartVisible", JSON.stringify(cartVisible));
+    }, [cartVisible]);    
 
     useEffect(() => {
         fetch("http://localhost:5000/meals")
@@ -145,6 +155,33 @@ const CreateMeals = () => {
         }
     };
 
+    const checkPlaceholderItem = (item) => { // function to check if an item is just a placeholder and not an actual grocery store item
+        if (item.type && item.type == 'placeholder') {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    const handleAddPlaceholderItemToMeal = (itemName) => {
+        const placeholderItem = { name: itemName, type: "placeholder" }
+        const newItemsList = mealItems;
+        newItemsList.push(placeholderItem);
+        setMealItems(newItemsList);
+        setMeals((prevMeals) => {
+            const updatedMeals = prevMeals.map((meal) => {
+                if (meal.name === selectedMeal) {
+                    return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
+                }
+                return meal;
+            });
+            return updatedMeals;
+        });
+        if (editedMeals.some(item => selectedMeal === item)) {
+            setEditedMeals([...editedMeals, selectedMeal]);
+        }
+    }
+
     const handleAddMealRecipe = (recipe) => {
         setRecipeLink(recipe);
         setMeals((prevMeals) => {
@@ -190,7 +227,8 @@ const CreateMeals = () => {
     };
 
     const handleAddMealToOrder = () => {
-        setOrderList([...orderList, { meal: selectedMeal, items: mealItems }]);
+        const itemsToAdd = mealItems.filter((item) => !checkPlaceholderItem(item));
+        setOrderList([...orderList, { meal: selectedMeal, items: itemsToAdd }]);
         localStorage.setItem("orderList", JSON.stringify([...orderList, { meal: selectedMeal, items: mealItems }]));
     };
 
@@ -321,9 +359,16 @@ const CreateMeals = () => {
     };
 
     // Meal auto generation
+    const extractIngredientsStart = () => {
+        setExtractIngredientsPopupOpen(true);
+        setExtractIngredientsInputs(true);
+        setExtractIngredientsLoading(false);
+        setExtractedIngredients([]);
+    };
+
     const extractIngredients = async (recipeUrl) => {
         try {
-            setExtractIngredientsPopupOpen(true); // Open the confirmation popup
+            setExtractIngredientsInputs(false);
             setExtractIngredientsLoading(true);
             const itemNames = items.map(item => item.name);
             const response = await fetch("http://localhost:5000/extract-ingredients", {
@@ -345,7 +390,7 @@ const CreateMeals = () => {
             const updatedIngredients = data.ingredients.map((ingredient) => {
                 if (ingredient.suggestedItem) {
                     const matchedItem = items.find(
-                        (item) => item.name === ingredient.suggestedItem
+                        (item) => item.name.trim() === ingredient.suggestedItem.trim()
                     );
 
                     return {
@@ -362,7 +407,98 @@ const CreateMeals = () => {
         }
     };
 
-    const createMeal = async () => {
+    const extractIngredientsFromText = async () => {
+        if (!recipeText) {
+
+            alert("Please copy the ingredients/recipe into the box and try again");
+
+        } else {
+            
+            try {
+
+                setExtractIngredientsInputs(false);
+                setExtractIngredientsLoading(true);
+                const itemNames = items.map(item => item.name); // item.name + "(" + `{item.size ? item.size.value : ""}` + ")" // Can try this again later with cut down list
+                const extractFrom = 'text'
+                const response = await fetch("http://localhost:5000/extract-ingredients", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ recipeText, itemNames, extractFrom }),
+                });
+
+                console.log(response.ok);
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch AI suggestions");
+                }
+
+                const data = await response.json();
+                setExtractIngredientsLoading(false);
+
+                // Map extracted ingredients to include full item details
+                const updatedIngredients = data.ingredients.map((ingredient) => {
+                    if (ingredient.suggestedItem) {
+                        const matchedItem = items.find(
+                            (item) => item.name.trim() === ingredient.suggestedItem.trim()
+                        );
+
+                        return {
+                            ...ingredient,
+                            fullItem: matchedItem || { name: ingredient.ingredient, type: 'placeholder' }, // Add full item if found, otherwise placeholder
+                        };
+                    }
+                    return ingredient;
+                });
+
+                setExtractedIngredients(updatedIngredients); // Store extracted ingredients
+            } catch (error) {
+                console.error("Failed to extract ingredients:", error);
+            }
+        }
+    };
+
+    const extractIngredientsFromImage = async (recipeImage) => {
+        try {
+            setExtractIngredientsInputs(false);
+            setExtractIngredientsLoading(true);
+            const itemNames = items.map(item => item.name);
+            const response = await fetch("http://localhost:5000/extract-ingredients", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ recipeImage, itemNames }),
+            });
+
+            console.log(response.ok);
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch AI suggestions");
+            }
+
+            const data = await response.json();
+            setExtractIngredientsLoading(false);
+
+            // Map extracted ingredients to include full item details
+            const updatedIngredients = data.ingredients.map((ingredient) => {
+                if (ingredient.suggestedItem) {
+                    const matchedItem = items.find(
+                        (item) => item.name.trim() === ingredient.suggestedItem.trim()
+                    );
+
+                    return {
+                        ...ingredient,
+                        fullItem: matchedItem || { name: ingredient.ingredient, type: 'placeholder' }, // Add full item if found, otherwise placeholder
+                    };
+                }
+                return ingredient;
+            });
+
+            setExtractedIngredients(updatedIngredients); // Store extracted ingredients
+        } catch (error) {
+            console.error("Failed to extract ingredients:", error);
+        }
+    };
+
+    const createMealFromExtraction = async () => {
         await extractedIngredients.forEach((ingredient) => handleAddItemToMeal(ingredient.fullItem))
         setExtractIngredientsPopupOpen(false);
         setExtractIngredientsLoading(false);
@@ -372,7 +508,12 @@ const CreateMeals = () => {
     const extractPopupClose = () => {
         setExtractIngredientsPopupOpen(false);
         setExtractIngredientsLoading(false);
+        setExtractIngredientsInputs(false);
         setExtractedIngredients([]);
+    };
+
+    const handleImageUpload = (event) => {
+        setImageFile(event.target.files[0]);
     };
 
     return (
@@ -474,7 +615,7 @@ const CreateMeals = () => {
                                 onChange={(e) => handleAddMealRecipe(e.target.value)} 
                                 className="recipe-link-input"
                             />
-                            <button title="Use AI to attempt to auto-populate meal item list from the recipe URL" className='auto-create-meal' onClick={() => extractIngredients(recipeLink)}>
+                            <button title="Use AI to attempt to auto-populate meal item list from the recipe URL" className='auto-create-meal' onClick={() => extractIngredientsStart()}>
                             AI Auto Generate From Recipe ⓘ
                             </button>
                         </div>
@@ -487,7 +628,15 @@ const CreateMeals = () => {
                                         <h2 className='meal-details-meal-name'>{selectedMeal}</h2>
                                         {mealItems.map((item, index) => (
                                             <div key={item._id} className="item-create-meal">
-                                                <span className="item-create-meal-text" key={index}>{item.name}</span>
+                                                <span className="item-create-meal-text" key={index}>
+                                                    {item.name}
+                                                    {checkPlaceholderItem(item) ? (
+                                                    <sup className="item-create-meal-text-placeholder" title="Placeholder Item: reminder to either look for and replace with a grocery store item from the app, or order it directly from the grocery store later if the item can't be found in the app." data-toggle="tooltip"> ⓘ placeholder</sup>
+                                                    ) : (
+                                                        <>
+                                                        </>
+                                                    )}
+                                                </span>
                                                 <span className="remove-meal-item" onClick={() => handleRemoveMealItem(index)}>✖</span>
                                             </div>
                                         ))}
@@ -501,13 +650,20 @@ const CreateMeals = () => {
                                 )}
 
                                 <div className="search-items-create">
-                                    <input
-                                        className="search-bar-create" 
-                                        type="text" 
-                                        placeholder="Search for an item..." 
-                                        value={search} 
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
+                                    <div className="search-bar-container">
+                                        <input
+                                            className="search-bar-create" 
+                                            type="text" 
+                                            placeholder="Search for an item..." 
+                                            value={search} 
+                                            onChange={(e) => setSearch(e.target.value)}
+                                        />
+                                        {search && (
+                                            <button title="If you can't find an item in the app (or via the exteral seach link below) you can add the search term as a placeholder reminder to add it directly from the grocery store later." className='add-placeholder' onClick={() => handleAddPlaceholderItemToMeal(search)}>
+                                            Add item placeholder ⓘ
+                                            </button>
+                                        )}
+                                    </div>
                                     <span className="external-search-link-create" onClick={() => setShowPopup(true)}>
                                         Can't find what you're looking for?
                                     </span>
@@ -623,7 +779,33 @@ const CreateMeals = () => {
                 <div className="popup-overlay">
                     <div className="popup-content">
                         <span className="popup-close-button" onClick={() => extractPopupClose()}>✖</span>
-                        <h3 className="popup-title">Suggested Items for Recipe</h3>
+                        <h3 className="popup-title">Auto Populate Meal From Recipe</h3>
+                        {extractIngredientsInputs ? (
+                            <>
+                                <div className="extract-text-area">
+                                    <p>Text upload</p>
+                                    <div className="extract-text-sub-area">
+                                        <textarea
+                                            placeholder="Paste recipe text here..."
+                                            value={recipeText}
+                                            onChange={(e) => setRecipeText(e.target.value)}
+                                            rows={5}
+                                        />
+                                        <span><button className="extract-create-meal" onClick={() => extractIngredientsFromText()}>Generate Meal From Text</button></span>
+                                    </div>
+                                </div>
+
+                                <div className="extract-image-area">
+                                    <p>Image upload</p>
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} />
+                                    <span><button className="extract-create-meal" onClick={extractIngredientsFromImage}>Generate Meal From Image</button></span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                            </>
+                        )}
+
                         {extractIngredientsLoading ? (
                             <div className="loading-message">Reading recipe, decyphering ingredients and finding appropriate items, please be patient...<div className="loading-spinner"></div></div>
                         ) : (
@@ -631,29 +813,33 @@ const CreateMeals = () => {
                             </>
                         )}
                         
-                        <div className="items-list">
-                            {extractedIngredients.map((ingredient) => (
-                                <div className="item-extracted" key={ingredient.name}>
-                                    {ingredient.name}: {ingredient.fullItem ? (
-                                        <span>
-                                            {ingredient.fullItem.name}{ingredient.fullItem.size ? ` (${ingredient.fullItem.size.value})` : ""}{ingredient.fullItem.price ? `, £${ingredient.fullItem.price.current.amount}` : ""}
-                                            <sup>
-                                                <a 
-                                                    href={`https://groceries.morrisons.com/products/${ingredient.fullItem.retailerProductId}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                    className="item-link"
-                                                >view ⎘</a>
-                                            </sup>
-                                        </span>
-                                    ) : (
-                                        <span className="warning">⚠️ No match found</span>
-                                    )}
+                        {extractedIngredients.length > 0 && (
+                            <>
+                                <div className="items-list">
+                                    {extractedIngredients.map((ingredient) => (
+                                        <div className="item-extracted" key={ingredient.ingredient}>
+                                            {ingredient.ingredient} ({ingredient.quantity}): {!checkPlaceholderItem(ingredient.fullItem) ? (
+                                                <span>
+                                                    {ingredient.fullItem.name}{ingredient.fullItem.size ? ` (${ingredient.fullItem.size.value})` : ""}{ingredient.fullItem.price ? `, £${ingredient.fullItem.price.current.amount}` : ""}
+                                                    <sup>
+                                                        <a 
+                                                            href={`https://groceries.morrisons.com/products/${ingredient.fullItem.retailerProductId}`} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="item-link"
+                                                        >view ⎘</a>
+                                                    </sup>
+                                                </span>
+                                            ) : (
+                                                <span className="extract-fail-warning" title="Clicking 'Add Items' will add this item as a placeholder which can then be replaced by an actual grocery store item once found, or kept as a placeholder as a reminder to add manually" data-toggle="tooltip">⚠️ No match found ⓘ</span>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                        <button className="extract-create-meal" onClick={() => createMeal()}>Add Items</button>
-                        <button className="extract-cancel" onClick={() => extractPopupClose()}>Cancel</button>
+                                <button className="extract-create-meal" onClick={() => createMealFromExtraction()}>Add Items</button>
+                                <button className="extract-cancel" onClick={() => extractPopupClose()}>Cancel</button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
