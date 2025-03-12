@@ -1,8 +1,11 @@
 *.xls*
 *.csv
 *checkpoint.ipynb
+*.ipynb_checkpoints*
 *.pickle
 *pycache*
 config.py
 *.env
 *.json
+*.png
+.ipynb_checkpoints

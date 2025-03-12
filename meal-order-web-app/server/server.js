@@ -6,9 +6,11 @@ const { Builder, By, Key, until } = require("selenium-webdriver");
 const fs = require("fs");
 const axios = require("axios");
 const https = require('https');
+const OpenAI = require("openai");
+//import OpenAI from "openai";
 
 const app = express();
-app.use(cors({origin: "http://localhost:3000", methods: ["GET", "POST"], credentials: true})); // Important for cookies/sessions));
+app.use(cors({origin: "http://localhost:3000", methods: ["GET", "POST", "DELETE"], credentials: true})); // Important for cookies/sessions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
@@ -366,23 +368,71 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
 });
 
 // AI agent to interpret recipes into shopping lists
-const router = express.Router();
+//const router = express.Router();
 
 app.post("/extract-ingredients", async (req, res) => {
 
     try {
-        const { recipeUrl, itemNames } = req.body;
+        const { recipeText, itemNames, extractFrom } = req.body;
+
+        const openai = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY,
+        });
 
         console.log("Constructing query")
 
-        /*const prompt = `
-        Extract the ingredients and quantities from the following recipe URL: ${recipeUrl}.
+        const prompt = `
+        Extract the ingredients and quantities if possible from the following text: ${recipeText}.
         Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
         Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
+        The suggestedItem should match exactly the wording from the list provided, and if no suitable item is found please write "None found".
         `;
 
-        // Call AI API (Example using OpenAI's GPT API)
-        const aiResponse = await axios.post("https://api.openai.com/v1/chat/completions", {
+        console.log(`Extract the ingredients and quantities if possible from the following text: ${recipeText}.`);
+
+        // Open AI querying
+        const aiResponse = await openai.responses.create({
+            "model": "gpt-4o-mini",
+            "input": [{ "role": "user", "content": prompt }],
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "recipe_extraction",
+                    "strict": true,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "ingredients": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "ingredient": {"type": "string"},
+                                        "quantity": {"type": "string"},
+                                        "suggestedItem": {"type": "string"},
+                                        "confidenceScore": {"type": "number"}
+                                    },
+                                    "required": ["ingredient", "quantity", "suggestedItem", "confidenceScore"],
+                                    "additionalProperties": false
+                                }
+                            }
+                        },
+                        "required": ["ingredients"],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            //"reasoning": {},
+            //"tools": [],
+            "temperature": 0.2,
+            "max_output_tokens": 2048,
+            //"top_p": 1,
+        });
+
+        console.log(aiResponse)
+
+
+        /*axios.post("https://api.openai.com/v1/chat/completions", {
             model: "gpt-4-turbo",
             messages: [{ role: "system", content: prompt }],
             temperature: 0.7
@@ -394,6 +444,7 @@ app.post("/extract-ingredients", async (req, res) => {
         });*/
 
 
+        /* // Webscraping.ai (method to scrape directly from URLs)
         const prompt = `
         Extract the ingredients and quantities from the website provided.
         Return an array of objects with 'ingredient' and 'quantity'
@@ -421,20 +472,21 @@ app.post("/extract-ingredients", async (req, res) => {
           });
         }).on("error", (err) => {
           console.log("Error: " + err.message);
-        });
+        });*/
 
         // Extract AI response
         //const extractedData = JSON.parse(aiResponse.data.choices[0].message.content);
         //res.json({ ingredients: extractedData });
 
-        res.json({ ingredients: [{ name: "Cucumber", quantity: "1", suggestedItem: "Morrisons Whole Cucumber" }, { name: "Brussel Sprouts", quantity: "200g", suggestedItem: "Morrisons Prepared Sprouts" }] });  // FOR TESTING
+        //res.json({ ingredients: [{ name: "Cucumber", quantity: "1", suggestedItem: "Morrisons Whole Cucumber" }, { name: "Brussel Sprouts", quantity: "200g", suggestedItem: "Morrisons Prepared Sprouts" }] });  // FOR TESTING
+        res.json( JSON.parse(aiResponse.output_text) )
     } catch (error) {
         console.error("Error extracting ingredients:", error);
         res.status(500).json({ error: "Failed to extract ingredients" });
     }
 });
 
-module.exports = router;
+//module.exports = router;
 
 const PORT = 5000;
 //app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
