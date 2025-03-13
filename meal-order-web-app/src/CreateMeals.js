@@ -48,7 +48,7 @@ const CreateMeals = () => {
     const [extractIngredientsInputs, setExtractIngredientsInputs] = useState(false);
     const [extractIngredientsLoading, setExtractIngredientsLoading] = useState(false);
     const [recipeText, setRecipeText] = useState("");
-    const [imageFile, setImageFile] = useState(null);
+    const [imageBase64, setImageBase64] = useState(null);
 
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -418,12 +418,13 @@ const CreateMeals = () => {
 
                 setExtractIngredientsInputs(false);
                 setExtractIngredientsLoading(true);
+                const recipeTextOrImage = recipeText;
                 const itemNames = items.map(item => item.name); // item.name + "(" + `{item.size ? item.size.value : ""}` + ")" // Can try this again later with cut down list
                 const extractFrom = 'text'
                 const response = await fetch("http://localhost:5000/extract-ingredients", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ recipeText, itemNames, extractFrom }),
+                    body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
                 });
 
                 console.log(response.ok);
@@ -457,44 +458,53 @@ const CreateMeals = () => {
         }
     };
 
-    const extractIngredientsFromImage = async (recipeImage) => {
-        try {
-            setExtractIngredientsInputs(false);
-            setExtractIngredientsLoading(true);
-            const itemNames = items.map(item => item.name);
-            const response = await fetch("http://localhost:5000/extract-ingredients", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ recipeImage, itemNames }),
-            });
+    const extractIngredientsFromImage = async () => {
+        if (!imageBase64) {
 
-            console.log(response.ok);
+            alert("Please upload an image and try again");
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch AI suggestions");
-            }
+        } else {
+            try {
 
-            const data = await response.json();
-            setExtractIngredientsLoading(false);
+                setExtractIngredientsInputs(false);
+                setExtractIngredientsLoading(true);
+                const recipeTextOrImage = imageBase64;
+                const itemNames = items.map(item => item.name);
+                const extractFrom = 'image'
+                const response = await fetch("http://localhost:5000/extract-ingredients", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
+                });
 
-            // Map extracted ingredients to include full item details
-            const updatedIngredients = data.ingredients.map((ingredient) => {
-                if (ingredient.suggestedItem) {
-                    const matchedItem = items.find(
-                        (item) => item.name.trim() === ingredient.suggestedItem.trim()
-                    );
+                console.log(response.ok);
 
-                    return {
-                        ...ingredient,
-                        fullItem: matchedItem || { name: ingredient.ingredient, type: 'placeholder' }, // Add full item if found, otherwise placeholder
-                    };
+                if (!response.ok) {
+                    throw new Error("Failed to fetch AI suggestions");
                 }
-                return ingredient;
-            });
 
-            setExtractedIngredients(updatedIngredients); // Store extracted ingredients
-        } catch (error) {
-            console.error("Failed to extract ingredients:", error);
+                const data = await response.json();
+                setExtractIngredientsLoading(false);
+
+                // Map extracted ingredients to include full item details
+                const updatedIngredients = data.ingredients.map((ingredient) => {
+                    if (ingredient.suggestedItem) {
+                        const matchedItem = items.find(
+                            (item) => item.name.trim() === ingredient.suggestedItem.trim()
+                        );
+
+                        return {
+                            ...ingredient,
+                            fullItem: matchedItem || { name: ingredient.ingredient, type: 'placeholder' }, // Add full item if found, otherwise placeholder
+                        };
+                    }
+                    return ingredient;
+                });
+
+                setExtractedIngredients(updatedIngredients); // Store extracted ingredients
+            } catch (error) {
+                console.error("Failed to extract ingredients:", error);
+            }
         }
     };
 
@@ -513,7 +523,14 @@ const CreateMeals = () => {
     };
 
     const handleImageUpload = (event) => {
-        setImageFile(event.target.files[0]);
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+                setImageBase64(reader.result); // Store the Base64 string
+            };
+        }
     };
 
     return (

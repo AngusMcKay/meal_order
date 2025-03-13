@@ -373,61 +373,129 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
 app.post("/extract-ingredients", async (req, res) => {
 
     try {
-        const { recipeText, itemNames, extractFrom } = req.body;
+
+        const { recipeTextOrImage, itemNames, extractFrom } = req.body;
 
         const openai = new OpenAI({
           apiKey: process.env.OPENAI_API_KEY,
         });
 
-        console.log("Constructing query")
+        let aiResponse = {}
 
-        const prompt = `
-        Extract the ingredients and quantities if possible from the following text: ${recipeText}.
-        Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
-        Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
-        The suggestedItem should match exactly the wording from the list provided, and if no suitable item is found please write "None found".
-        `;
+        if (extractFrom == 'text') {
 
-        console.log(`Extract the ingredients and quantities if possible from the following text: ${recipeText}.`);
+            console.log("Constructing query for text")
 
-        // Open AI querying
-        const aiResponse = await openai.responses.create({
-            "model": "gpt-4o-mini",
-            "input": [{ "role": "user", "content": prompt }],
-            "text": {
-                "format": {
-                    "type": "json_schema",
-                    "name": "recipe_extraction",
-                    "strict": true,
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "ingredients": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "ingredient": {"type": "string"},
-                                        "quantity": {"type": "string"},
-                                        "suggestedItem": {"type": "string"},
-                                        "confidenceScore": {"type": "number"}
-                                    },
-                                    "required": ["ingredient", "quantity", "suggestedItem", "confidenceScore"],
-                                    "additionalProperties": false
+            const prompt = `
+            Extract the ingredients and quantities if possible from the following text: ${recipeTextOrImage}.
+            Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
+            Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
+            The suggestedItem should match exactly the wording from the list provided, and if no suitable item is found please write "None found".
+            `;
+
+            // Open AI querying
+            aiResponse = await openai.responses.create({
+                "model": "gpt-4o-mini",
+                "input": [{ "role": "user", "content": prompt }],
+                "text": {
+                    "format": {
+                        "type": "json_schema",
+                        "name": "recipe_extraction",
+                        "strict": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "ingredients": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ingredient": {"type": "string"},
+                                            "quantity": {"type": "string"},
+                                            "suggestedItem": {"type": "string"},
+                                            "confidenceScore": {"type": "number"}
+                                        },
+                                        "required": ["ingredient", "quantity", "suggestedItem", "confidenceScore"],
+                                        "additionalProperties": false
+                                    }
                                 }
-                            }
-                        },
-                        "required": ["ingredients"],
-                        "additionalProperties": false
+                            },
+                            "required": ["ingredients"],
+                            "additionalProperties": false
+                        }
                     }
-                }
-            },
-            //"reasoning": {},
-            //"tools": [],
-            "temperature": 0.2,
-            "max_output_tokens": 2048,
-            //"top_p": 1,
-        });
+                },
+                //"reasoning": {},
+                //"tools": [],
+                "temperature": 0.2,
+                "max_output_tokens": 2048,
+                //"top_p": 1,
+            });
+
+        } else {
+
+            console.log("Getting ingredients from image")
+
+            const promptIngredients = `Extract the ingredients and quantities if possible from the attached image.`;
+
+            // Open AI querying
+            aiResponseIngredients = await openai.responses.create({
+                "model": "gpt-4o-mini",
+                "input": [{ "role": "user", "content": [{ "type": "input_text", "text": promptIngredients }, { "type": "input_image", "image_url": recipeTextOrImage }] }],
+                //"reasoning": {},
+                //"tools": [],
+                "temperature": 0.2,
+                "max_output_tokens": 2048,
+                //"top_p": 1,
+            });
+
+            console.log(`Getting items from ingredients: ${aiResponseIngredients.output_text}`)
+
+            const prompt = `
+            Extract the ingredients and quantities if possible from the following text: ${aiResponseIngredients.output_text}.
+            Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
+            Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
+            `;
+            
+            // Open AI querying
+            aiResponse = await openai.responses.create({
+                "model": "gpt-4o-mini",
+                "input": [{ "role": "user", "content": prompt }],
+                "text": {
+                    "format": {
+                        "type": "json_schema",
+                        "name": "recipe_extraction",
+                        "strict": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "ingredients": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "ingredient": {"type": "string"},
+                                            "quantity": {"type": "string"},
+                                            "suggestedItem": {"type": "string"},
+                                            "confidenceScore": {"type": "number"}
+                                        },
+                                        "required": ["ingredient", "quantity", "suggestedItem", "confidenceScore"],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            },
+                            "required": ["ingredients"],
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                //"reasoning": {},
+                //"tools": [],
+                "temperature": 0.2,
+                "max_output_tokens": 2048,
+                //"top_p": 1,
+            });
+        }
 
         console.log(aiResponse)
 
