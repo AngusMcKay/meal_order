@@ -93,6 +93,10 @@ const CreateMeals = () => {
     }, []);
 
     const handleCreateMeal = () => {
+        if (newMealName === "") {
+            setError("Enter a meal name to proceed!");
+            return;
+        }
         if (meals.some(meal => meal.name.toLowerCase() === newMealName.toLowerCase())) {
             setError("Meal name already exists");
             setTimeout(() => setError(""), 3000);
@@ -527,10 +531,42 @@ const CreateMeals = () => {
         if (file) {
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onloadend = () => {
-                setImageBase64(reader.result); // Store the Base64 string
+
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d");
+
+                    // Set the new image dimensions
+                    const maxWidth = 600; // Resize width
+                    const maxHeight = 600; // Resize height
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        if (width > height) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        } else {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    // Apply resizing to canvas
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert canvas back to Base64
+                    const resizedBase64 = canvas.toDataURL("image/png", 0.8); // Compress at 80% quality
+                    setImageBase64(resizedBase64);
+                };
             };
-        }
+        };
     };
 
     return (
@@ -622,19 +658,21 @@ const CreateMeals = () => {
                                 </div>
                             </div>
                         )}
+
                         <div className="recipe-link-container">
-                            <p htmlFor="recipe-link">Recipe Link:</p>
+                            <button title="Use AI to auto-populate meal item list from either recipe text or a picture of the recipe" className='auto-create-meal' onClick={() => extractIngredientsStart()}>
+                            🤖 Auto Populate From Text or Image ⓘ
+                            </button>
+                            {/*<p htmlFor="recipe-link">Recipe Link:</p>*/}
                             <input 
                                 type="text" 
                                 id="recipe-link" 
-                                placeholder="Paste recipe URL here..." 
+                                placeholder="Save recipe URL with meal..." 
                                 value={recipeLink} 
                                 onChange={(e) => handleAddMealRecipe(e.target.value)} 
                                 className="recipe-link-input"
                             />
-                            <button title="Use AI to attempt to auto-populate meal item list from the recipe URL" className='auto-create-meal' onClick={() => extractIngredientsStart()}>
-                            AI Auto Generate From Recipe ⓘ
-                            </button>
+                            
                         </div>
 
                         {selectedMeal && (
@@ -803,6 +841,7 @@ const CreateMeals = () => {
                                     <p>Text upload</p>
                                     <div className="extract-text-sub-area">
                                         <textarea
+                                            className="extract-text-input"
                                             placeholder="Paste recipe text here..."
                                             value={recipeText}
                                             onChange={(e) => setRecipeText(e.target.value)}
