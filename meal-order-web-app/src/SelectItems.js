@@ -31,6 +31,8 @@ const SelectItems = () => {
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
 
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -142,6 +144,7 @@ const SelectItems = () => {
 
             setExternalResults([]);
             setShowPopup(false); // Close pop-up after adding
+            setSearchCompleteStatement("");
         } catch (error) {
             console.error("Error adding items:", error);
         }
@@ -172,6 +175,20 @@ const SelectItems = () => {
         setLoadingBasketPopup(false);
         setLoadingBasket(false);
         setFailedItems([]);
+    };
+
+    const handleMouseEnter = (event, item) => {
+        setHoveredItem(item);
+        
+        const rect = event.currentTarget.getBoundingClientRect();
+        const bufferSpace = 10; // Space between item and popup
+
+        console.log(event.pageY);
+        console.log(rect.top);
+        setPopupPosition({
+            top: rect.top - 460,
+            left: rect.left + rect.width - 430
+        });
     };
 
     return (
@@ -218,7 +235,7 @@ const SelectItems = () => {
                 ) : (
                     <div className="items-list">
                         {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
-                            <div key={item._id} className="item formatted-item">
+                            <div key={item._id} className="item formatted-item"  onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                 <span className="item-text-select-items">
                                     {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
                                     <sup>
@@ -233,6 +250,15 @@ const SelectItems = () => {
                                 <button className="add-item-button" onClick={() => handleAddToOrder(item)}>Add</button>
                             </div>
                         ))}
+
+                        {hoveredItem && hoveredItem.image?.src && (
+                            <div 
+                                className="hover-popup" 
+                                style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
+                            >
+                                <img src={hoveredItem.image.src} alt={hoveredItem.name} />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

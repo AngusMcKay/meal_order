@@ -49,6 +49,8 @@ const CreateMeals = () => {
     const [extractIngredientsLoading, setExtractIngredientsLoading] = useState(false);
     const [recipeText, setRecipeText] = useState("");
     const [imageBase64, setImageBase64] = useState(null);
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
 
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -282,6 +284,7 @@ const CreateMeals = () => {
     };
 
     const findNewItems = async (searchTerm) => {
+        setExternalResults([]);
         setPopupLoading(true);
         setSearchCompleteStatement("");
         try {
@@ -569,6 +572,20 @@ const CreateMeals = () => {
         };
     };
 
+    const handleMouseEnter = (event, item) => {
+        setHoveredItem(item);
+        
+        const rect = event.currentTarget.getBoundingClientRect();
+        const bufferSpace = 10; // Space between item and popup
+
+        console.log(event.pageY);
+        console.log(rect.top);
+        setPopupPosition({
+            top: rect.top - 460,
+            left: rect.left + rect.width + bufferSpace
+        });
+    };
+
     return (
         <div className="create-meals-container">
             <ToastContainer />
@@ -727,7 +744,7 @@ const CreateMeals = () => {
                                     ) : (
                                         <div className="items-list-create">
                                             {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
-                                                <div key={item._id} className="item-create">
+                                                <div key={item._id} className="item-create" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                                     <span className="item-text-create">
                                                         {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
                                                         <sup>
@@ -742,6 +759,15 @@ const CreateMeals = () => {
                                                     <button className="add-item-button" onClick={() => handleAddItemToMeal(item)}>Add</button>
                                                 </div>
                                             ))}
+
+                                            {hoveredItem && hoveredItem.image?.src && (
+                                                <div 
+                                                    className="hover-popup" 
+                                                    style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
+                                                >
+                                                    <img src={hoveredItem.image.src} alt={hoveredItem.name} />
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
