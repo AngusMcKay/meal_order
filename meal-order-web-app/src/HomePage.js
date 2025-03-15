@@ -23,6 +23,7 @@ const HomePage = () => {
         const savedCartPosition = localStorage.getItem("cartVisible");
         return savedCartPosition ? JSON.parse(savedCartPosition) : false;
     });
+    const [clearCartPopup, setClearCartPopup] = useState(false);
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
@@ -44,6 +45,10 @@ const HomePage = () => {
     }, []);
 
     useEffect(() => {
+        localStorage.setItem("orderList", JSON.stringify(orderList));
+    }, [orderList]);
+
+    useEffect(() => {
         localStorage.setItem("cartVisible", JSON.stringify(cartVisible));
     }, [cartVisible]);  
 
@@ -57,7 +62,21 @@ const HomePage = () => {
             }).filter(order => order.items.length > 0);
             return updatedOrders;
         });
-    }
+    };
+
+    const removeCartMeal = (mealIndex) => {
+        const updatedOrders = orderList.filter((order, index) => index !== mealIndex);
+        setOrderList(updatedOrders);
+    };
+
+    const clearCartCheck = () => {
+        setClearCartPopup(true);
+    };
+
+    const clearCart = () => {
+        setOrderList([]);
+        setClearCartPopup(false);  
+    };
 
     const loadBasket = async (orderList) => {
         setFailedItems([]);
@@ -111,7 +130,9 @@ const HomePage = () => {
                     setCartVisible={setCartVisible}
                     orderList={orderList}
                     removeCartItem={removeCartItem}
+                    removeCartMeal={removeCartMeal}
                     loadBasket={loadBasket}
+                    clearCartCheck={clearCartCheck}
                 />
             )}
 
@@ -124,6 +145,19 @@ const HomePage = () => {
                     failedItems={failedItems}
                     orderProgress={orderProgress}
                 />
+            )}
+
+            {clearCartPopup && (
+                <div className="clear-cart-popup-overlay">
+                    <div className="clear-cart-popup">
+                        <h3>Are you sure you want to remove all items from the Shopping List?</h3>
+                        <p>This action cannot be undone</p>
+                        <div className="clear-cart-popup-buttons">
+                            <button className="clear-cart-confirm-delete" onClick={clearCart}>Yes, Delete</button>
+                            <button className="clear-cart-cancel-delete" onClick={() => setClearCartPopup(false)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

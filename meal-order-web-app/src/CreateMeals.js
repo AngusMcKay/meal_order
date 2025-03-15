@@ -30,6 +30,7 @@ const CreateMeals = () => {
         const savedCartPosition = localStorage.getItem("cartVisible");
         return savedCartPosition ? JSON.parse(savedCartPosition) : false;
     });
+    const [clearCartPopup, setClearCartPopup] = useState(false);
     const [editingMode, setEditingMode] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);
@@ -281,6 +282,20 @@ const CreateMeals = () => {
             }).filter(order => order.items.length > 0);
             return updatedOrders;
         });
+    };
+
+    const removeCartMeal = (mealIndex) => {
+        const updatedOrders = orderList.filter((order, index) => index !== mealIndex);
+        setOrderList(updatedOrders);
+    };
+
+    const clearCartCheck = () => {
+        setClearCartPopup(true);
+    };
+
+    const clearCart = () => {
+        setOrderList([]);
+        setClearCartPopup(false);  
     };
 
     const findNewItems = async (searchTerm) => {
@@ -573,17 +588,19 @@ const CreateMeals = () => {
     };
 
     const handleMouseEnter = (event, item) => {
-        setHoveredItem(item);
-        
-        const rect = event.currentTarget.getBoundingClientRect();
-        const bufferSpace = 10; // Space between item and popup
+        if ( item.image.src ) {
+            setHoveredItem(item);
+            
+            const rect = event.currentTarget.getBoundingClientRect();
 
-        console.log(event.pageY);
-        console.log(rect.top);
-        setPopupPosition({
-            top: rect.top - 460,
-            left: rect.left + rect.width + bufferSpace
-        });
+            setPopupPosition({
+                top: rect.top,
+                left: rect.right
+            });    
+        } else {
+            setHoveredItem(null)
+        }
+        
     };
 
     return (
@@ -731,7 +748,7 @@ const CreateMeals = () => {
                                             onChange={(e) => setSearch(e.target.value)}
                                         />
                                         {search && (
-                                            <button title="If you can't find an item in the app (or via the exteral seach link below) you can add the search term as a placeholder reminder to add it directly from the grocery store later." className='add-placeholder' onClick={() => handleAddPlaceholderItemToMeal(search)}>
+                                            <button title="If you can't find an item in the app (or via the exteral search link below) you can add the search term as a placeholder reminder to add it directly from the grocery store later." className='add-placeholder' onClick={() => handleAddPlaceholderItemToMeal(search)}>
                                             Add item placeholder ⓘ
                                             </button>
                                         )}
@@ -759,15 +776,6 @@ const CreateMeals = () => {
                                                     <button className="add-item-button" onClick={() => handleAddItemToMeal(item)}>Add</button>
                                                 </div>
                                             ))}
-
-                                            {hoveredItem && hoveredItem.image?.src && (
-                                                <div 
-                                                    className="hover-popup" 
-                                                    style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
-                                                >
-                                                    <img src={hoveredItem.image.src} alt={hoveredItem.name} />
-                                                </div>
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -778,13 +786,24 @@ const CreateMeals = () => {
                 )}
             </div>
 
+            {hoveredItem && hoveredItem.image?.src && (
+                <div 
+                    className="hover-popup-create" 
+                    style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
+                >
+                    <img src={hoveredItem.image.src} alt={hoveredItem.name} />
+                </div>
+            )}
+
             {cartVisible && (
                 <CartSidebar 
                     cartVisible={cartVisible} 
                     setCartVisible={setCartVisible} 
                     orderList={orderList} 
                     removeCartItem={removeCartItem}
+                    removeCartMeal={removeCartMeal}
                     loadBasket={loadBasket}
+                    clearCartCheck={clearCartCheck}
                 />
             )}
 
@@ -797,6 +816,19 @@ const CreateMeals = () => {
                     failedItems={failedItems}
                     orderProgress={orderProgress}
                 />
+            )}
+
+            {clearCartPopup && (
+                <div className="clear-cart-popup-overlay">
+                    <div className="clear-cart-popup">
+                        <h3>Are you sure you want to remove all items from the Shopping List?</h3>
+                        <p>This action cannot be undone</p>
+                        <div className="clear-cart-popup-buttons">
+                            <button className="clear-cart-confirm-delete" onClick={clearCart}>Yes, Delete</button>
+                            <button className="clear-cart-cancel-delete" onClick={() => setClearCartPopup(false)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* POPUP */}
@@ -833,7 +865,7 @@ const CreateMeals = () => {
                                 </button>
                                 <div className="items-list">
                                     {externalResults.map((item, index) => (
-                                        <div key={index} className="item">
+                                        <div key={index} className="item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                             <span className="item-text-select-items">
                                                 {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
                                                 <sup>
@@ -899,7 +931,7 @@ const CreateMeals = () => {
                             <>
                                 <div className="items-list">
                                     {extractedIngredients.map((ingredient) => (
-                                        <div className="item-extracted" key={ingredient.ingredient}>
+                                        <div className="item-extracted" key={ingredient.ingredient} onMouseEnter={(event) => handleMouseEnter(event, ingredient.fullItem)} onMouseLeave={() => setHoveredItem(null)}>
                                             {ingredient.ingredient} ({ingredient.quantity}): {!checkPlaceholderItem(ingredient.fullItem) ? (
                                                 <span>
                                                     {ingredient.fullItem.name}{ingredient.fullItem.size ? ` (${ingredient.fullItem.size.value})` : ""}{ingredient.fullItem.price ? `, £${ingredient.fullItem.price.current.amount}` : ""}

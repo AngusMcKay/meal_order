@@ -23,6 +23,7 @@ const SelectItems = () => {
         const savedCartPosition = localStorage.getItem("cartVisible");
         return savedCartPosition ? JSON.parse(savedCartPosition) : false;
     });
+    const [clearCartPopup, setClearCartPopup] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
     const [externalResults, setExternalResults] = useState([]);
@@ -94,6 +95,20 @@ const SelectItems = () => {
             }).filter(order => order.items.length > 0);
             return updatedOrders;
         });
+    };
+
+    const removeCartMeal = (mealIndex) => {
+        const updatedOrders = orderList.filter((order, index) => index !== mealIndex);
+        setOrderList(updatedOrders);
+    };
+
+    const clearCartCheck = () => {
+        setClearCartPopup(true);
+    };
+
+    const clearCart = () => {
+        setOrderList([]);
+        setClearCartPopup(false);  
     };
 
     const findNewItems = async (searchTerm) => {
@@ -181,13 +196,28 @@ const SelectItems = () => {
         setHoveredItem(item);
         
         const rect = event.currentTarget.getBoundingClientRect();
+        const container = document.querySelector(".item-list-container"); // Get the container
+        const containerRect = container?.getBoundingClientRect(); // Get container position
         const bufferSpace = 10; // Space between item and popup
 
-        console.log(event.pageY);
-        console.log(rect.top);
+        /* // Keeping these here for reference later if needed
+        console.log(`event.pageX: ${event.pageX}`); // x position of mouse wrt edge of the page (including all off-screen content)
+        console.log(`event.pageY: ${event.pageY}`); // x position of mouse wrt edge of the page (including off-screen content)
+        console.log(`event.clientX: ${event.clientX}`); // Same as pageX when not scrolled
+        console.log(`event.clientY: ${event.clientY}`); // Same as rect.top
+        console.log(`window.scrollX: ${window.scrollX}`); //
+        console.log(`window.scrollY: ${window.scrollY}`); // Scroll amount = pageY - clientY (or pageY = rect.top)
+        console.log(`rect.top: ${rect.top}`); // position of top of item being hovered over wrt edge of browser window (can be negative if top of item is partially off screen)
+        console.log(`rect.left: ${rect.left}`); // left hand side of item being hovered over wrt browser window (can be -ve)
+        console.log(`rect.width: ${rect.width}`); // width of item being hovered over (can be -ve)
+        console.log(`rect.right: ${rect.right}`);
+        console.log(`document.documentElement.scrollTop: ${document.documentElement.scrollTop}`);
+        */
+        
+        // Popup has 'fixed' position so top and left are relative to entire page
         setPopupPosition({
-            top: rect.top - 460,
-            left: rect.left + rect.width - 430
+            top: rect.top,  // want this to be based on "event.pageY - height of content above items container"
+            left: rect.right
         });
     };
 
@@ -235,7 +265,7 @@ const SelectItems = () => {
                 ) : (
                     <div className="items-list">
                         {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
-                            <div key={item._id} className="item formatted-item"  onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
+                            <div key={item._id} className="item formatted-item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                 <span className="item-text-select-items">
                                     {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
                                     <sup>
@@ -250,18 +280,17 @@ const SelectItems = () => {
                                 <button className="add-item-button" onClick={() => handleAddToOrder(item)}>Add</button>
                             </div>
                         ))}
-
-                        {hoveredItem && hoveredItem.image?.src && (
-                            <div 
-                                className="hover-popup" 
-                                style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
-                            >
-                                <img src={hoveredItem.image.src} alt={hoveredItem.name} />
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
+            {hoveredItem && hoveredItem.image?.src && (
+                <div 
+                    className="hover-popup-select" 
+                    style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
+                >
+                    <img src={hoveredItem.image.src} alt={hoveredItem.name} />
+                </div>
+            )}
 
             {cartVisible && (
                 <CartSidebar 
@@ -269,7 +298,9 @@ const SelectItems = () => {
                     setCartVisible={setCartVisible} 
                     orderList={orderList} 
                     removeCartItem={removeCartItem}
+                    removeCartMeal={removeCartMeal}
                     loadBasket={loadBasket}
+                    clearCartCheck={clearCartCheck}
                 />
             )}
 
@@ -307,7 +338,7 @@ const SelectItems = () => {
                                 </button>
                                 <div className="items-list">
                                     {externalResults.map((item, index) => (
-                                        <div key={index} className="item">
+                                        <div key={index} className="item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                             <span className="item-text-select-items">
                                                 {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
                                                 <sup>
@@ -339,6 +370,19 @@ const SelectItems = () => {
                     failedItems={failedItems}
                     orderProgress={orderProgress}
                 />
+            )}
+
+            {clearCartPopup && (
+                <div className="clear-cart-popup-overlay">
+                    <div className="clear-cart-popup">
+                        <h3>Are you sure you want to remove all items from the Shopping List?</h3>
+                        <p>This action cannot be undone</p>
+                        <div className="clear-cart-popup-buttons">
+                            <button className="clear-cart-confirm-delete" onClick={clearCart}>Yes, Delete</button>
+                            <button className="clear-cart-cancel-delete" onClick={() => setClearCartPopup(false)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
             )}
 
         </div>

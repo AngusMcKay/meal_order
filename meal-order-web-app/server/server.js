@@ -75,8 +75,8 @@ const Item = mongoose.model("Item", ItemSchema);
 // API to fetch meals
 app.get("/items", async (req, res) => {
     try {
-        const items = await Item.find();
-        //console.log("Items sent to frontend:", items); // useful for testing but don't want to always print thousands of documents to console
+        const items = await Item.find({}, "_id productId retailerProductId name price size image.src");
+        
         res.json(items);
     } catch (err) {
         console.error("Error fetching items:", err);
@@ -456,7 +456,7 @@ app.post("/extract-ingredients", async (req, res) => {
             Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
             Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
             `;
-            
+
             // Open AI querying
             aiResponse = await openai.responses.create({
                 "model": "gpt-4o-mini",

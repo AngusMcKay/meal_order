@@ -1,16 +1,19 @@
 import React from "react";
 import "./Generic.css";
 
-export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCartItem, loadBasket }) => {
+export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCartItem, removeCartMeal, loadBasket, clearCartCheck }) => {
     return (
     	<>
 	        <div className={`cart-sidebar ${cartVisible ? "visible" : ""}`}>
 	            <button className="close-cart" onClick={() => setCartVisible(false)}>✖</button>
 	            <h2 className="cart-title">Shopping List</h2>
+	            {orderList.length > 0 && (
+					<div className="clear-cart" onClick={() => clearCartCheck()}>[Clear List]</div>
+	            )}
 	            {orderList.length > 0 ? (
 	                orderList.map((order, mealIndex) => (
 	                    <div key={mealIndex} className="cart-meal">
-	                        <strong>{order.meal}</strong>
+	                        <strong>{order.meal}</strong><sup className="remove-cart-meal" onClick={() => removeCartMeal(mealIndex)}> [✖]</sup>
 	                        {order.items.map((item, itemIndex) => (
 	                            <div key={itemIndex} className="cart-item">
 	                                <span className="cart-item-text">{item.name}</span>
