@@ -565,6 +565,8 @@
     cursor: pointer;
     border-radius: 8px;
     box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.5);
+    color: #444;
+    align-items: center;
 }
 
 .extract-cancel {
@@ -581,19 +583,34 @@
 }
 
 .extract-text-area {
-    width: 100%;
+    width: 80%;
+    margin: auto;
     border: 1px solid #444;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #444;
 }
 
 .extract-text-sub-area {
-    width: 80%;
+    width: 90%;
+    margin: 0 auto;
     display: flex;
     align-items: center;
-    vertical-align: middle;
     justify-content: space-between;
-    text-align: center;
+}
+
+.extract-text-sub-area-left {
+    margin: 30px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.extract-text-sub-area-right {
+    margin: 30px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .extract-text-input {
@@ -602,19 +619,38 @@
 
 .extract-create-meal {
     margin: auto;
+    color: white;
+    height: 80px;
+    width: 180px;
 }
 
 .extract-image-area {
-    width: 100%;
+    width: 80%;
+    margin: auto;
     border: 1px solid #444;
     border-radius: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #444
 }
 
 .extract-image-sub-area {
-    width: 80%;
+    width: 90%;
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.extract-image-sub-area-left {
+    margin: 30px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.extract-image-sub-area-right {
+    margin: 30px;
+    display: inline-block;
     vertical-align: middle;
 }
 

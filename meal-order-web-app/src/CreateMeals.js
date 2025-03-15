@@ -898,21 +898,31 @@ const CreateMeals = () => {
                                 <div className="extract-text-area">
                                     <p>Text upload</p>
                                     <div className="extract-text-sub-area">
-                                        <textarea
-                                            className="extract-text-input"
-                                            placeholder="Paste recipe text here..."
-                                            value={recipeText}
-                                            onChange={(e) => setRecipeText(e.target.value)}
-                                            rows={5}
-                                        />
-                                        <span><button className="extract-create-meal" onClick={() => extractIngredientsFromText()}>Generate Meal From Text</button></span>
+                                        <div className="extract-text-sub-area-left">
+                                            <textarea
+                                                className="extract-text-input"
+                                                placeholder="Paste recipe text here..."
+                                                value={recipeText}
+                                                onChange={(e) => setRecipeText(e.target.value)}
+                                                rows={5}
+                                            />
+                                        </div>
+                                        <div className="extract-text-sub-area-right">
+                                            <button className="extract-create-meal" onClick={() => extractIngredientsFromText()}>Generate Meal From Text</button>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="extract-image-area">
                                     <p>Image upload</p>
-                                    <input type="file" accept="image/*" onChange={handleImageUpload} />
-                                    <span><button className="extract-create-meal" onClick={extractIngredientsFromImage}>Generate Meal From Image</button></span>
+                                    <div className="extract-image-sub-area">
+                                        <div className="extract-image-sub-area-left">
+                                            <input type="file" accept="image/*" onChange={handleImageUpload} />
+                                        </div>
+                                        <div className="extract-image-sub-area-right">
+                                            <span><button className="extract-create-meal" onClick={extractIngredientsFromImage}>Generate Meal From Image</button></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </>
                         ) : (
