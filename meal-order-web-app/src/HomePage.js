@@ -8,7 +8,8 @@ import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
+const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
+const socket = io(`${API_BASE_URL}`, { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });

@@ -6,7 +6,8 @@ import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
+const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
+const socket = io(`${API_BASE_URL}`, { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -56,7 +57,7 @@ const SelectMeals = () => {
     
     // Fetch meals from backend
     useEffect(() => {
-        fetch("http://192.168.1.165:5000/meals")
+        fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then((response) => response.json())
             .then((data) => setMealsData(data))
             .catch((err) => console.error("Error fetching meals:", err));

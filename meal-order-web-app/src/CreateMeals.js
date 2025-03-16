@@ -8,7 +8,8 @@ import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
+const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
+const socket = io(`${API_BASE_URL}`, { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -78,12 +79,12 @@ const CreateMeals = () => {
     }, [cartVisible]);    
 
     useEffect(() => {
-        fetch("http://192.168.1.165:5000/meals")
+        fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
             .then(data => setMeals(data))
             .catch(error => console.error("Error fetching meals:", error));
 
-        fetch("http://192.168.1.165:5000/items")
+        fetch(`${API_BASE_URL}/items`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
             .then(data => {
                 setItems(data);
@@ -211,9 +212,9 @@ const CreateMeals = () => {
             return;
         }
         try {
-            const response = await fetch("http://192.168.1.165:5000/upsert-meal", {
+            const response = await fetch(`${API_BASE_URL}/upsert-meal`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: selectedMeal,
                     items: mealItems,
@@ -241,8 +242,9 @@ const CreateMeals = () => {
 
     const handleDeleteMeal = async () => {
         try {
-            const response = await fetch(`http://192.168.1.165:5000/meals/${encodeURIComponent(selectedMeal)}`, {
+            const response = await fetch(`${API_BASE_URL}/meals/${encodeURIComponent(selectedMeal)}`, {
                 method: "DELETE",
+                "ngrok-skip-browser-warning": "true"
             });
 
             if (!response.ok) {
@@ -303,9 +305,9 @@ const CreateMeals = () => {
         setPopupLoading(true);
         setSearchCompleteStatement("");
         try {
-            const response = await fetch("http://192.168.1.165:5000/find-new-items", {
+            const response = await fetch(`${API_BASE_URL}/find-new-items`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({ query: searchTerm }),
             });
 
@@ -323,9 +325,9 @@ const CreateMeals = () => {
 
     const addNewItems = async () => {
         try {
-            await fetch("http://192.168.1.165:5000/add-new-items", {
+            await fetch(`${API_BASE_URL}/add-new-items`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({ items: externalResults }),
             });
 
@@ -402,9 +404,9 @@ const CreateMeals = () => {
                 const recipeTextOrImage = recipeText;
                 const itemNames = items.map(item => item.name); // item.name + "(" + `{item.size ? item.size.value : ""}` + ")" // Can try this again later with cut down list
                 const extractFrom = 'text'
-                const response = await fetch("http://192.168.1.165:5000/extract-ingredients", {
+                const response = await fetch(`${API_BASE_URL}/extract-ingredients`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                     body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
                 });
 
@@ -452,9 +454,9 @@ const CreateMeals = () => {
                 const recipeTextOrImage = imageBase64;
                 const itemNames = items.map(item => item.name);
                 const extractFrom = 'image'
-                const response = await fetch("http://192.168.1.165:5000/extract-ingredients", {
+                const response = await fetch(`${API_BASE_URL}/extract-ingredients`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                     body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
                 });
 

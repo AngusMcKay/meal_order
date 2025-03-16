@@ -10,7 +10,7 @@ const OpenAI = require("openai");
 //import OpenAI from "openai";
 
 const app = express();
-app.use(cors({origin: "http://localhost:3000", methods: ["GET", "POST", "DELETE"], credentials: true})); // Important for cookies/sessions));
+app.use(cors({origin: ["*", "http://localhost:3000", "http://192.168.1.165:3000", "https://a9e5-146-200-183-146.ngrok-free.app"], methods: ["GET", "POST", "DELETE"], credentials: true})); // Important for cookies/sessions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 

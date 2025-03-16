@@ -6,7 +6,8 @@ import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
+const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
+const socket = io(`${API_BASE_URL}`, { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -61,7 +62,7 @@ const SelectItems = () => {
 
     // Fetch items from backend
     useEffect(() => {
-        fetch("http://192.168.1.165:5000/items")
+        fetch(`${API_BASE_URL}/items`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
             .then(data => {
                 setItems(data);
@@ -115,9 +116,9 @@ const SelectItems = () => {
         setPopupLoading(true);
         setSearchCompleteStatement("");
         try {
-            const response = await fetch("http://192.168.1.165:5000/find-new-items", {
+            const response = await fetch(`${API_BASE_URL}/find-new-items`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({ query: searchTerm }),
             });
 
@@ -135,9 +136,9 @@ const SelectItems = () => {
 
     const addNewItems = async () => {
         try {
-            await fetch("http://192.168.1.165:5000/add-new-items", {
+            await fetch(`${API_BASE_URL}/add-new-items`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({ items: externalResults }),
             });
 
