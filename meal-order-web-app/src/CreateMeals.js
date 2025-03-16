@@ -3,12 +3,12 @@ import "./CreateMeals.css";
 import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
+import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://localhost:5000", { transports: ["websocket"] });
+const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -78,12 +78,12 @@ const CreateMeals = () => {
     }, [cartVisible]);    
 
     useEffect(() => {
-        fetch("http://localhost:5000/meals")
+        fetch("http://192.168.1.165:5000/meals")
             .then(response => response.json())
             .then(data => setMeals(data))
             .catch(error => console.error("Error fetching meals:", error));
 
-        fetch("http://localhost:5000/items")
+        fetch("http://192.168.1.165:5000/items")
             .then(response => response.json())
             .then(data => {
                 setItems(data);
@@ -163,7 +163,7 @@ const CreateMeals = () => {
     };
 
     const checkPlaceholderItem = (item) => { // function to check if an item is just a placeholder and not an actual grocery store item
-        if (item.type && item.type == 'placeholder') {
+        if (item.type && item.type === 'placeholder') {
             return true;
         } else {
             return false;
@@ -211,7 +211,7 @@ const CreateMeals = () => {
             return;
         }
         try {
-            const response = await fetch("http://localhost:5000/upsert-meal", {
+            const response = await fetch("http://192.168.1.165:5000/upsert-meal", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -241,7 +241,7 @@ const CreateMeals = () => {
 
     const handleDeleteMeal = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/meals/${encodeURIComponent(selectedMeal)}`, {
+            const response = await fetch(`http://192.168.1.165:5000/meals/${encodeURIComponent(selectedMeal)}`, {
                 method: "DELETE",
             });
 
@@ -303,7 +303,7 @@ const CreateMeals = () => {
         setPopupLoading(true);
         setSearchCompleteStatement("");
         try {
-            const response = await fetch("http://localhost:5000/find-new-items", {
+            const response = await fetch("http://192.168.1.165:5000/find-new-items", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query: searchTerm }),
@@ -323,7 +323,7 @@ const CreateMeals = () => {
 
     const addNewItems = async () => {
         try {
-            await fetch("http://localhost:5000/add-new-items", {
+            await fetch("http://192.168.1.165:5000/add-new-items", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items: externalResults }),
@@ -388,47 +388,6 @@ const CreateMeals = () => {
         setExtractedIngredients([]);
     };
 
-    const extractIngredients = async (recipeUrl) => {
-        try {
-            setExtractIngredientsInputs(false);
-            setExtractIngredientsLoading(true);
-            const itemNames = items.map(item => item.name);
-            const response = await fetch("http://localhost:5000/extract-ingredients", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ recipeUrl, itemNames }),
-            });
-
-            console.log(response.ok);
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch AI suggestions");
-            }
-
-            const data = await response.json();
-            setExtractIngredientsLoading(false);
-
-            // Map extracted ingredients to include full item details
-            const updatedIngredients = data.ingredients.map((ingredient) => {
-                if (ingredient.suggestedItem) {
-                    const matchedItem = items.find(
-                        (item) => item.name.trim() === ingredient.suggestedItem.trim()
-                    );
-
-                    return {
-                        ...ingredient,
-                        fullItem: matchedItem || null, // Add full item if found, otherwise null
-                    };
-                }
-                return ingredient;
-            });
-
-            setExtractedIngredients(updatedIngredients); // Store extracted ingredients
-        } catch (error) {
-            console.error("Failed to extract ingredients:", error);
-        }
-    };
-
     const extractIngredientsFromText = async () => {
         if (!recipeText) {
 
@@ -443,7 +402,7 @@ const CreateMeals = () => {
                 const recipeTextOrImage = recipeText;
                 const itemNames = items.map(item => item.name); // item.name + "(" + `{item.size ? item.size.value : ""}` + ")" // Can try this again later with cut down list
                 const extractFrom = 'text'
-                const response = await fetch("http://localhost:5000/extract-ingredients", {
+                const response = await fetch("http://192.168.1.165:5000/extract-ingredients", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
@@ -493,7 +452,7 @@ const CreateMeals = () => {
                 const recipeTextOrImage = imageBase64;
                 const itemNames = items.map(item => item.name);
                 const extractFrom = 'image'
-                const response = await fetch("http://localhost:5000/extract-ingredients", {
+                const response = await fetch("http://192.168.1.165:5000/extract-ingredients", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
@@ -611,7 +570,7 @@ const CreateMeals = () => {
                     <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
-                <h1 className="title">Create Meals</h1>
+                <h1 className="title">Create Meals and Lists</h1>
             </div>
             
             <div className="bottom-section-create">
@@ -620,14 +579,14 @@ const CreateMeals = () => {
 
                     <>
                         <p className="items-description">
-                            Create and save meals to add to order now or in the future
+                            Create and save meals and lists to add to order now or save for future adding ease
                         </p>
                         <div className="options">
                             <div className="create-new">
                                 <input
                                     className="create-new-input"
                                     type="text" 
-                                    placeholder="Enter new meal name" 
+                                    placeholder="Enter new meal/list name" 
                                     value={newMealName} 
                                     onChange={(e) => setNewMealName(e.target.value)}
                                 />
@@ -644,7 +603,7 @@ const CreateMeals = () => {
 
                             <div className="edit-existing">
                                 <select className="edit-meal-dropdown" value="" onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
-                                    <option value="" disabled>Select existing meal to edit</option>
+                                    <option value="" disabled>Select existing meal/list to edit</option>
                                     {meals.map(meal => (
                                         <option key={meal.name} value={meal.name}>{meal.name}</option>
                                     ))}
@@ -671,7 +630,7 @@ const CreateMeals = () => {
                         {showDeletePopup && (
                             <div className="delete-popup-overlay">
                                 <div className="delete-popup">
-                                    <h3>Are you sure you want to delete this meal?</h3>
+                                    <h3>Are you sure you want to delete this meal/list?</h3>
                                     <p>This action cannot be undone</p>
                                     <div className="delete-popup-buttons">
                                         <button className="confirm-delete" onClick={handleDeleteMeal}>Yes, Delete</button>
@@ -683,7 +642,7 @@ const CreateMeals = () => {
                         {deleteConfirmation && (
                             <div className="confirm-delete-overlay">
                                 <div className="delete-confirmation-popup">
-                                    <p>Meal deleted</p>
+                                    <p>Meal/list deleted</p>
                                     <button onClick={() => {
                                         setDeleteConfirmation(false);
                                         setSelectedMeal(null);
@@ -694,7 +653,7 @@ const CreateMeals = () => {
                         )}
 
                         <div className="recipe-link-container">
-                            <button title="Use AI to auto-populate meal item list from either recipe text or a picture of the recipe" className='auto-create-meal' onClick={() => extractIngredientsStart()}>
+                            <button title="Use AI to auto-populate meal item list from either recipe text or a picture of a recipe" className='auto-create-meal' onClick={() => extractIngredientsStart()}>
                             🤖 Auto Populate From Text or Image ⓘ
                             </button>
                             {/*<p htmlFor="recipe-link">Recipe Link:</p>*/}

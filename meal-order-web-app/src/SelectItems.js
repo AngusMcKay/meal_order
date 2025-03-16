@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./SelectItems.css";
 import "./Generic.css";
-import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
+import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://localhost:5000", { transports: ["websocket"] });
+const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -61,7 +61,7 @@ const SelectItems = () => {
 
     // Fetch items from backend
     useEffect(() => {
-        fetch("http://localhost:5000/items")
+        fetch("http://192.168.1.165:5000/items")
             .then(response => response.json())
             .then(data => {
                 setItems(data);
@@ -115,7 +115,7 @@ const SelectItems = () => {
         setPopupLoading(true);
         setSearchCompleteStatement("");
         try {
-            const response = await fetch("http://localhost:5000/find-new-items", {
+            const response = await fetch("http://192.168.1.165:5000/find-new-items", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query: searchTerm }),
@@ -135,7 +135,7 @@ const SelectItems = () => {
 
     const addNewItems = async () => {
         try {
-            await fetch("http://localhost:5000/add-new-items", {
+            await fetch("http://192.168.1.165:5000/add-new-items", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items: externalResults }),
@@ -196,9 +196,8 @@ const SelectItems = () => {
         setHoveredItem(item);
         
         const rect = event.currentTarget.getBoundingClientRect();
-        const container = document.querySelector(".item-list-container"); // Get the container
-        const containerRect = container?.getBoundingClientRect(); // Get container position
-        const bufferSpace = 10; // Space between item and popup
+        //const container = document.querySelector(".item-list-container"); // Get the container
+        //const containerRect = container?.getBoundingClientRect(); // Get container position
 
         /* // Keeping these here for reference later if needed
         console.log(`event.pageX: ${event.pageX}`); // x position of mouse wrt edge of the page (including all off-screen content)
@@ -237,7 +236,7 @@ const SelectItems = () => {
                 </p>
                 <div className="select-item-category">
                     <span className="select-item-category-title" data-tooltip="Any items added will be shown under this heading in the shopping list">
-                    <a className="info-sign">ⓘ</a> Category: 
+                    <span className="info-sign">ⓘ</span> Category: 
                     </span>
                     <input 
                         type="text" 

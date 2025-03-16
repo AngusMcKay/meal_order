@@ -99,5 +99,61 @@
 .create:hover { background-color: #ff8091; }
 
 
+@media (max-width: 768px) {  /* Adjust for tablets and smaller devices */
+    .cart-button-home {
+        position: absolute;
+        top: 5px;
+        right: 2px;
+        background: white;
+        padding: 5px 7px;
+        border: solid;
+        border-color: #444;
+        border-width: 1px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 10px;
+        color: #444;
+        margin-left: 4px;
+        margin-right: 4px;
+        z-index: 1;
+        box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
+    }
 
+    .title {
+        font-size: 30px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #245682
+    }
+
+    .title-word {
+        padding: 2px;
+        border-radius: 2px;
+    }
+
+    .description {
+        font-size: 14px;
+        color: #4a5568;
+        max-width: 768px;
+        margin-bottom: 20px;
+    }
+
+    .button-container.row {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        z-index: 1;
+    }
+
+    .button {
+        padding: 7px 20px;
+        font-size: 10px;
+        font-weight: bold;
+        border-radius: 5px;
+        border: none;
+        color: #245682;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
+    }
+}
 

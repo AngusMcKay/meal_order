@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./SelectMeals.css";
 import "./Generic.css";
-import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
+import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://localhost:5000", { transports: ["websocket"] });
+const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -56,7 +56,7 @@ const SelectMeals = () => {
     
     // Fetch meals from backend
     useEffect(() => {
-        fetch("http://localhost:5000/meals")
+        fetch("http://192.168.1.165:5000/meals")
             .then((response) => response.json())
             .then((data) => setMealsData(data))
             .catch((err) => console.error("Error fetching meals:", err));
@@ -80,7 +80,7 @@ const SelectMeals = () => {
     };
 
     const checkPlaceholderItem = (item) => { // function to check if an item is just a placeholder and not an actual grocery store item
-        if (item.type && item.type == 'placeholder') {
+        if (item.type && item.type === 'placeholder') {
             return true;
         } else {
             return false;
@@ -149,12 +149,12 @@ const SelectMeals = () => {
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
 
-                <h1 className="meal-title">Select Your Meal</h1>
+                <h1 className="meal-title">My Meals and Lists</h1>
             </div>
 
             <div className="bottom-section-meals"> 
                 <p className="meal-description">
-                    Select a meal below and add items to your order
+                    Select a meal or predefined list below and add items to your order
                 </p>
                 <select className="meal-dropdown" onChange={handleMealChange} value={selectedMeal}>
                     <option value="" disabled>Select a meal</option>

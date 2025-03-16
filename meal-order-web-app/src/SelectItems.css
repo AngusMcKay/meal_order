@@ -227,3 +227,230 @@
     max-height: 150px;
     display: block;
 }
+
+
+@media (max-width: 768px) {  /* Adjust for tablets and smaller devices */
+    /* Styling for the top section */
+    .top-section {
+        background: #ffde8f;
+        color: white;
+        text-align: center;
+        padding-top: 5px;
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
+    }
+
+    /* Styling for the bottom section */
+    .bottom-section {
+        flex-grow: 1;
+        background-color: #f4f4f4;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    /* Adding a background with faint food icons */
+    .bottom-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('/assets/cooking-spice-pattern-black-white-colors/0811229.jpg');
+        background-size: 1500px;
+        opacity: 0.05;
+        z-index: 0;
+    }
+
+    .items-title {
+        font-size: 30px;
+        font-weight: bold;
+        margin-bottom: 1px;
+        color: #245682;
+    }
+
+    .items-description {
+        font-size: 12px;
+        color: #4a5568;
+        margin-bottom: 7px;
+    }
+
+    .select-item-category {
+        flex-direction: row;
+        margin-bottom: 5px;
+        margin-left: 5px;
+        z-index: 1;
+    }
+
+    .select-item-category-title {
+        width: 40%;
+        font-size: 12px;
+        color: #4a5568;
+        margin-bottom: 7px;
+        margin-right: 5px;
+    }
+
+    .select-item-category-title::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: grey;
+        color: white;
+        padding: 2px;
+        border-radius: 2px;
+        font-size: 7px;
+        white-space: nowrap;
+        visibility: hidden;
+        opacity: 100;
+        transition: opacity 0.2s;
+    }
+
+    .select-item-category-title:hover::after {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .info-sign {
+        font-size: 10px;
+
+    }
+
+    .category-input {
+        width: 200px;
+        padding: 5px;
+        font-size: 10px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #fff;
+        color: #333;
+        outline: none;
+        cursor: text;
+        transition: border-color 0.3s ease-in-out;
+        z-index: 1;
+        box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .select-item-search {
+        width: 40%;
+        padding: 5px;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+        z-index: 1;
+    }
+
+    /* Dropdown and input styling */
+    .search-bar {
+        width: 80%;
+        display: block;
+        margin: 0 auto;
+        padding: 5px;
+        font-size: 10px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #fff;
+        color: #333;
+        outline: none;
+        cursor: text;
+        transition: border-color 0.3s ease-in-out;
+        z-index: 1;
+        box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .meal-dropdown:hover,
+    .meal-dropdown:focus {
+        border-color: #2980b9;
+    }
+
+    /* Items List */
+    .items-list {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Individual Item */
+    .item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 60%;
+        background-color: #f8f8f8;
+        padding: 5px;
+        margin: 2px 0;
+        border-radius: 4px;
+        font-size: 9px;
+    }
+
+    /* Item Text */
+    .item-text-select-items {
+        flex: 1;
+        text-align: left;
+        font-size: 10px;
+        color: #444;
+    }
+
+    .item-text-select-items sup {
+        margin-left: 2px;
+        font-size: 0.3em;
+    }
+
+    .add-item-button {
+        margin-left: 10px;
+        margin-top: 1px;
+        padding: 1px 2px;
+        font-size: 7px;
+        font-weight: bold;
+        border-radius: 2px;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
+        background-color: #2E6F40;
+    }
+
+    /* Loading spinner */
+    .loading-message {
+        margin-top: 10px;
+        color: #444;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .external-search-link {
+        width: 100%;
+        text-align: center;
+        color: blue;
+        font-size: 7px;
+        cursor: pointer;
+        margin-left: 5px;
+        z-index: 1;
+    }
+
+    .hover-popup-select {
+        position: fixed; /* fixed relative to viewport */
+        background-color: white;
+        padding: 5px;
+        border: 1px solid #ccc;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        border-radius: 4px;
+    }
+
+    .hover-popup-select img {
+        max-width: 75px;
+        max-height: 75px;
+        display: block;
+    }
+}

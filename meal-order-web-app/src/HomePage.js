@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Tooltip } from "@mui/material";
 import "./HomePage.css";
 import "./Generic.css";
-import { runSeleniumTest, loadBasketMorrisons } from './Selenium.js'
+import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 
 // Set up socket.io for order progress updates
 import io from "socket.io-client";
-const socket = io("http://localhost:5000", { transports: ["websocket"] });
+const socket = io("http://192.168.1.165:5000", { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
 });
@@ -104,23 +104,23 @@ const HomePage = () => {
             <div className="header">
                 <button className="cart-button-home" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
             </div>
-            <h1 className="title">Welcome to the Meal Order Web App</h1>
+            <h1 className="title">Welcome to Grocery List & Delivery</h1>
             <p className="description">
                 Streamline your grocery shopping by selecting meals and automatically populating shopping carts.
                 Choose one of the options below to get started.
             </p>
             
             <div className="button-container row">
-                <Tooltip title="Select predefined meal combinations" arrow>
-                    <button className="button meals" onClick={() => navigate("/select-meals")}>Select Meals</button>
+                <Tooltip title="Select from presaved meal combinations and item lists to add to Shopping Basket" arrow>
+                    <button className="button meals" onClick={() => navigate("/select-meals")}>My Meals and Lists</button>
                 </Tooltip>
                 
-                <Tooltip title="Choose individual items for your order" arrow>
-                    <button className="button items" onClick={() => navigate("/select-items")}>Select Individual Items</button>
+                <Tooltip title="Add individual items for your order" arrow>
+                    <button className="button items" onClick={() => navigate("/select-items")}>Individual Items</button>
                 </Tooltip>
                 
-                <Tooltip title="Create custom meal combinations" arrow>
-                    <button className="button create" onClick={() => navigate("/create-meals")}>Create Meals</button>
+                <Tooltip title="Create meals and lists to save for future use" arrow>
+                    <button className="button create" onClick={() => navigate("/create-meals")}>Create Meals and Lists</button>
                 </Tooltip>
             </div>
 

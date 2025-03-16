@@ -9,3 +9,5 @@ config.py
 *.json
 *.png
 .ipynb_checkpoints
+meal-order-web-app/android/*
+meal-order-web-app/capacitor*
