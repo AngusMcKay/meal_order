@@ -10,9 +10,25 @@ const OpenAI = require("openai");
 //import OpenAI from "openai";
 
 const app = express();
-app.use(cors({origin: ["*", "http://localhost:3000", "http://192.168.1.165:3000", "https://a9e5-146-200-183-146.ngrok-free.app"], methods: ["GET", "POST", "DELETE"], credentials: true})); // Important for cookies/sessions));
+app.use(cors({
+    origin: ["*", "http://localhost:3000", "http://192.168.1.165:3000", "https://3601-146-200-183-146.ngrok-free.app"],
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
+    credentials: true
+})); // Important for cookies/sessions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// Logging activity to help debugging
+app.use((req, res, next) => {
+    console.log(`🔵 Received ${req.method} request for ${req.url}`);
+    //res.setHeader("Access-Control-Allow-Origin", "*");
+    //res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    //res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, ngrok-skip-browser-warning");
+    //res.setHeader("Access-Control-Allow-Credentials", "true");
+    //res.setHeader("Connection", "keep-alive");
+    next();
+});
 
 // socket.io setup for posting updates to front end
 const http = require("http");
@@ -26,6 +42,11 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
     });
+});
+
+// Explicitly handle OPTIONS requests
+app.options("*", (req, res) => {
+    res.sendStatus(200);
 });
 
 // Check if MongoDB URI is properly loaded
@@ -52,9 +73,10 @@ const Meal = mongoose.model("Meal", MealSchema);
 
 // API to fetch meals
 app.get("/meals", async (req, res) => {
+    console.log("Calling meals")
     try {
-        const meals = await Meal.find();
-        //console.log("Meals sent to frontend:", meals); // useful for testing but don't want to always print thousands of documents to console
+        const meals = await Meal.find({}, "_id name recipe items.productId items.retailerProductId items.name items.price items.size items.image.src");
+        console.log("🟢 Meals found:", meals.length);
         res.json(meals);
     } catch (err) {
         console.error("Error fetching meals:", err);

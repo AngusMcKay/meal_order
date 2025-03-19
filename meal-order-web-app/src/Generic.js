@@ -13,7 +13,7 @@ export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCart
 	            {orderList.length > 0 ? (
 	                orderList.map((order, mealIndex) => (
 	                    <div key={mealIndex} className="cart-meal">
-	                        <strong>{order.meal}</strong><sup className="remove-cart-meal" onClick={() => removeCartMeal(mealIndex)}> [✖]</sup>
+	                        <strong className="cart-item-text">{order.meal}</strong><div className="clear-cart" onClick={() => removeCartMeal(mealIndex)}> [Remove Meal]</div>
 	                        {order.items.map((item, itemIndex) => (
 	                            <div key={itemIndex} className="cart-item">
 	                                <span className="cart-item-text">{item.name}</span>
@@ -23,7 +23,7 @@ export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCart
 	                    </div>
 	                ))
 	            ) : (
-	                <p>No items in the cart.</p>
+	                <p className="cart-item-text">No items in the cart.</p>
 	            )}
 	        </div>
 	        <div className='cart-sidebar-bottom'>

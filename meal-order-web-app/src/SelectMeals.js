@@ -59,7 +59,10 @@ const SelectMeals = () => {
     useEffect(() => {
         fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then((response) => response.json())
-            .then((data) => setMealsData(data))
+            .then((data) => {
+                console.log("Fetched data:", data);
+                setMealsData(data);
+            })
             .catch((err) => console.error("Error fetching meals:", err));
     }, []);
 

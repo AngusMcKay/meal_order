@@ -40,7 +40,7 @@
 }
 
 .meal-title {
-    font-size: 80px;
+    font-size: 50px;
     font-weight: bold;
     margin-bottom: 2px;
     color: #245682;
@@ -221,7 +221,7 @@
     }
 
     .select-meal-recipe-link {
-        margin-top: 5px;
+        margin-top: 3px;
         z-index: 1;
     }
 

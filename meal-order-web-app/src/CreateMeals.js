@@ -549,19 +549,23 @@ const CreateMeals = () => {
     };
 
     const handleMouseEnter = (event, item) => {
-        if ( item.image.src ) {
-            setHoveredItem(item);
-            
-            const rect = event.currentTarget.getBoundingClientRect();
+        try {
+            if ( item.image.src ) {
+                setHoveredItem(item);
+                
+                const rect = event.currentTarget.getBoundingClientRect();
 
-            setPopupPosition({
-                top: rect.top,
-                left: rect.right
-            });    
-        } else {
-            setHoveredItem(null)
+                setPopupPosition({
+                    top: rect.top,
+                    left: rect.right
+                });    
+            } else {
+                setHoveredItem(null);
+            }
+        } catch {
+            setHoveredItem(null);
         }
-        
+            
     };
 
     return (
@@ -572,7 +576,7 @@ const CreateMeals = () => {
                     <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
-                <h1 className="title">Create Meals and Lists</h1>
+                <h1 className="create-title">Create Meals and Lists</h1>
             </div>
             
             <div className="bottom-section-create">
