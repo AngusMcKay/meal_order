@@ -3,7 +3,7 @@ const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
 
 export const runSeleniumTest = async () => {
     try {
-        const response = await fetch("${API_BASE_URL}/run-selenium-test", { method: "POST" });
+        const response = await fetch(`${API_BASE_URL}/run-selenium-test`, { method: "POST" });
         const data = await response.json();
         alert(data.message);
     } catch (error) {
@@ -13,7 +13,7 @@ export const runSeleniumTest = async () => {
 
 export const loadBasketMorrisons = async (orderList) => {
     try {
-        const response = await fetch("${API_BASE_URL}/run-selenium-morrisons-order", {
+        const response = await fetch(`${API_BASE_URL}/run-selenium-morrisons-order`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ orderList })
