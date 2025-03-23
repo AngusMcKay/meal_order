@@ -11,7 +11,13 @@ const OpenAI = require("openai");
 
 const app = express();
 app.use(cors({
-    origin: ["*", "http://localhost:3000", "http://192.168.1.165:3000", "https://3601-146-200-183-146.ngrok-free.app"],
+    origin: [
+        "*",
+        "http://localhost:3000",
+        "http://192.168.1.165:3000",
+        "https://3601-146-200-183-146.ngrok-free.app",
+        "chrome-extension://hhoihhpmoidknndoahijkpomcjgmloaa"
+    ],
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     credentials: true
@@ -210,6 +216,18 @@ app.delete("/meals/:name", async (req, res) => {
         res.status(200).json({ message: "Meal deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Error deleting meal", error });
+    }
+});
+
+// Store cookies
+app.post("/store-cookies", async (req, res) => {
+    try {
+        const { cookies } = req.body;
+        // NEED TO GET USERNAME AND STORE ENCRYPTED COOKIES IN DATABASE
+        fs.writeFileSync("retrievedCookies.json", JSON.stringify(cookies, null, 2));
+        console.log("Message Received");
+    } catch (error) {
+        res.status(500).json({ message: "Error storing cookies", error });
     }
 });
 
