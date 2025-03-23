@@ -249,8 +249,138 @@ app.post("/run-selenium-test", async (req, res) => {
     }
 });
 
-// Selenium orders
+// Selenium orders - new version to work with handling cookie extraction from remote users using extension
 app.post("/run-selenium-morrisons-order", async (req, res) => {
+    const orderList = req.body.orderList; // Receive orderList from frontend
+    if (!orderList || orderList.length === 0) {
+        return res.status(400).json({ error: "No orders received." });
+    }
+
+    if (!fs.existsSync("saved_cookies_morrisons.json")) {
+        console.log("No cookies found, need to go back to frontend to retrieve");
+        return res.json({ success: false, reason: "cookies needed" });
+    }
+
+    io.emit("orderProgress", "Connecting to grocery store");
+
+    // Start headless driver session
+    let chrome = require("selenium-webdriver/chrome");
+    let options = new chrome.Options();
+    options.addArguments("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.50 Safari/537.36")
+    options.addArguments("--headless"); // Runs Chrome in headless mode (can comment out for testing)
+    options.addArguments("--disable-gpu"); // Disables GPU hardware acceleration
+    options.addArguments("--window-size=1920,1080"); // Ensures consistent rendering
+    driver = await new Builder().forBrowser("chrome").setChromeOptions(options).build();
+
+    // First open page and accept cookies
+    let logged_in = false;
+    try {
+        driver.manage().setTimeouts({ implicit: 10000 }); // need delay to give cookies pop-up time to pop up
+        await driver.get('https://groceries.morrisons.com/');
+
+        // Accept cookies
+        let cookieAccept = await driver.findElement(By.id('onetrust-accept-btn-handler'));
+        await cookieAccept.click();
+
+        // Check for cookies from previous login and apply
+        if (fs.existsSync("saved_cookies_morrisons.json")) {
+            console.log("Existing cookies found, applying and confirming log in status");
+            let saved_cookies = JSON.parse(fs.readFileSync("saved_cookies_morrisons.json"));
+            // Add cookies from previous logged in session (note that site needs to be opened before cookies can be applied)
+            for (let cookie of saved_cookies) {
+                try {
+                    await driver.manage().addCookie(cookie);
+                } catch (err) {
+                    console.warn(`⚠️ Failed to add cookie: ${cookie.name}`);
+                } finally {
+                    console.log(`Successfully added cookie: ${cookie.name}`);
+                }
+            }
+
+            // Login detection method 1: check whether login dropdown still exists
+            try {
+                driver.manage().setTimeouts({ implicit: 10000 });
+                //let loginButton = await driver.findElement(By.xpath('//button[@data-synthetics="login-dropdown-button"]'));
+                //await loginButton.click();
+                //console.log('Log in button found after cookies applied, so need to run through manual login again');
+                await driver.get('https://groceries.morrisons.com/');
+                let accountButton = await driver.findElement(By.id('account-button'));
+                await accountButton.click();
+                console.log('Account button found after cookies applied, login successful');
+                logged_in = true;
+            } catch {
+                // if above element doesn't exist then it means not logged in so leave logged_in as false - maybe more elegent way to handle this?
+            } finally {
+                driver.manage().setTimeouts({ implicit: 10000 }); // set back to more tolerant timeout
+            }
+        }
+    } catch (err) {
+        console.error("Error starting session:", error);
+    }
+
+    // If not managed to start logged in session then need to go back to frontend to login and capture cookies
+    if (!logged_in) {
+        res.json({ success: false, reason: "cookies needed" });
+
+    } else { // Otherwise if logged in ok then proceed with placing order and capturing failed items
+        // Headless driver should now be logged in, so continue to place order
+        let failedItems = [];
+        // Place order
+        try {
+
+            // Loop through order and try to add items to basket
+            for (let order of orderList) {
+                for (let item of order.items) {
+                    let retailerProductId = item.retailerProductId;
+                    let productUrl = `https://groceries.morrisons.com/products/${retailerProductId}`;
+                    console.log(`Opening: ${productUrl}`);
+
+                    try { // Must be a better way to do this?
+                        await driver.get(productUrl);
+                        io.emit("orderProgress", `Finding and adding ${item.name}...    `);
+                        let a1 = `@aria-label='Add ${item.name} to basket'`
+                        let a2 = `@aria-label='Add ${item.name}  to basket'`
+                        let a3 = `@aria-label='Add ${item.name}   to basket'`
+                        let i1 = `@aria-label='Increase quantity of ${item.name} in trolley'`
+                        let i2 = `@aria-label='Increase quantity of ${item.name}  in trolley'`
+                        let i3 = `@aria-label='Increase quantity of ${item.name}   in trolley'`
+
+                        let addButton = await driver.wait(until.elementLocated(By.xpath(
+                            `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);
+                        await addButton.click();
+                        console.log(`✅ Added: ${item.name}`);
+                        io.emit("orderProgress", `Finding and adding ${item.name} - ✅`);
+                    } catch (err) {
+                        console.log(`❌ Failed to add: ${item.name}`);
+                        console.error('Error', err)
+                        io.emit("orderProgress", `Couldn't add ${item.name}, added to fail list (viewable after)`);
+                        failedItems.push(item);
+                        driver.takeScreenshot().then(
+                            function(image, error) {
+                                fs.writeFileSync(`failed_order_${retailerProductId}.png`, image, 'base64', function(error) {
+                                    console.log(error);
+                                });
+                            }
+                        );
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error processing order list:", error);
+        } finally {
+            io.emit("orderComplete", "Order Complete");
+            await driver.get('https://groceries.morrisons.com/'); // final call to go back to home page ensures last item gets added before quiting driver
+            await driver.quit();
+            io.emit("orderComplete", ""); // blanks last message to remove messages
+        }
+
+        res.json({ success: true, failedItems: failedItems }); // Send failed items back to frontend
+    }
+
+});
+
+// Selenium orders - original version that uses selenium to popup the login screen and capture cookies (but only works when running the app locally as selenium can operate remote user's browsers)
+app.post("/run-selenium-morrisons-order-orig", async (req, res) => {
     const orderList = req.body.orderList; // Receive orderList from frontend
     if (!orderList || orderList.length === 0) {
         return res.status(400).json({ error: "No orders received." });
@@ -404,7 +534,7 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
         io.emit("orderComplete", ""); // blanks last message to remove messages
     }
 
-    res.json({ failedItems }); // Send failed items back to frontend
+    res.json({ success: true, failedItems: failedItems }); // Send failed items back to frontend
 });
 
 // AI agent to interpret recipes into shopping lists
