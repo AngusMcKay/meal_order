@@ -7,7 +7,7 @@ import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 import io from "socket.io-client";
 
-const EXTENSION_ID = process.env.REACT_APP_EXTENSION_ID;
+const EXTENSION_ID = "hhoihhpmoidknndoahijkpomcjgmloaa" //process.env.REACT_APP_EXTENSION_ID;
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
 const GROCERY_SITE_URL = process.env.REACT_APP_GROCERY_SITE_URL;
 
@@ -38,9 +38,6 @@ const HomePage = () => {
     const [showExtCookiePopup, setShowExtCookiePopup] = useState(false);
     const [extCookiePopupMessage, setExtCookiePopupMessage] = useState("");
     const [extCookiePopupLink, setExtCookiePopupLink] = useState("");
-    useEffect(() => {
-        checkForExistingCookies();
-    }, []);
     
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -103,6 +100,8 @@ const HomePage = () => {
             if (orderResponse.success === true) {
                 orderFails = orderResponse.failedItems;
             } else {
+                setLoadingBasketPopup(false);
+                setLoadingBasket(false);
                 checkForExtension();
             }
         } catch (error) {
@@ -119,22 +118,10 @@ const HomePage = () => {
         setFailedItems([]);
     };
 
-    const checkForExistingCookies = () => {
-        // Simulate checking for cookies (Replace this with an actual check)
-        const existingCookies = false; // Change to true if cookies exist
-
-        if (existingCookies) {
-            console.log("✅ Required cookies found.");
-            onCookiesReady();
-        } else {
-            console.log("❌ Cookies NOT found. Checking for extension...");
-            checkForExtension();
-        }
-    };
-
     const checkForExtension = () => {
+        console.log(`Attempting to connect to extension ${EXTENSION_ID}`)
         if (!window.chrome || !window.chrome.runtime || !window.chrome.runtime.sendMessage) {
-            console.log("❌ Chrome extension API not available.");
+            console.log("❌ Chrome extension API not available");
             setExtCookiePopupMessage("A Chrome browser extension is required for this app to work. Please install it and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon!");
             setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
             setShowExtCookiePopup(true);
@@ -143,8 +130,14 @@ const HomePage = () => {
         }
 
         window.chrome.runtime.sendMessage(EXTENSION_ID, { action: "ping" }, (response) => {
-            if (window.chrome.runtime.lastError || !response) {
-                console.log("❌ Extension NOT found.");
+            if (window.chrome.runtime.lastError) {
+                console.error("❌ Error:", window.chrome.runtime.lastError.message);
+                setExtCookiePopupMessage("A Chrome browser extension is required for this app to work. Please install it and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon!");
+                setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
+                setShowExtCookiePopup(true);
+                setExtensionExists(false);
+            } else if (!response) {
+                console.log("❌ Extension NOT found - can't find.");
                 setExtCookiePopupMessage("A Chrome browser extension is required for this app to work. Please install it and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon!");
                 setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
                 setShowExtCookiePopup(true);
@@ -155,10 +148,11 @@ const HomePage = () => {
                 extractCookies();
             }
         });
+
     };
 
     const extractCookies = () => {
-        if (!window.chrome || !window.chrome.runtime || !window.chrome.runtime.sendMessage) {
+        if (!window.chrome || !window.chrome.runtime) {
             console.log("❌ Chrome extension API not available.");
             setExtCookiePopupMessage("A Chrome browser extension is required for this app to work. Please install it and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon!");
             setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
@@ -181,31 +175,30 @@ const HomePage = () => {
     };
 
     const checkExtractedCookies = async (cookies) => {
-        const relevantCookies = cookies.some(cookie => cookie.domain.includes("morrisons.com")); // Add more constraints: cookie.name === "session" && cookie.domain.includes("morrisons.com")
+        const relevantCookies = cookies.filter(cookie => cookie.domain.includes("morrisons.com")); // Add more constraints: cookie.name === "session" && cookie.domain.includes("morrisons.com")
 
-        if (relevantCookies) {
+        if (relevantCookies.length > 0) {
             console.log("✅ Required cookies are present. Saving..");
-            await fetch(`http://localhost:5000/store-cookies`, {
+            const saving_response = await fetch(`http://localhost:5000/store-cookies`, {
                 method: "POST",
                 headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({ cookies: relevantCookies }),
             });
-            onCookiesReady();
+
+            const data = await saving_response.json();
+            if (data.success) {
+                console.log(data.message);
+                loadBasket(orderList);
+            } else {
+                console.log("Failed to save cookies");
+            }
+            
         } else {
             console.log("❌ Required cookies NOT found.");
             setExtCookiePopupMessage("Store login needed before app can proceed. Please follow the link below to login and click OK once done.");
             setExtCookiePopupLink(GROCERY_SITE_URL);
             setShowExtCookiePopup(true);
         }
-    };
-
-    const onCookiesReady = () => {
-        console.log("✅ Cookies are ready! Running the main app function...");
-        performAppFunction();
-    };
-
-    const performAppFunction = () => {
-        console.log("🚀 Running the main application function...");
     };
 
     return (
@@ -270,14 +263,18 @@ const HomePage = () => {
             )}
 
             {showExtCookiePopup && (
-                <div className="popup">
-                    <p>{extCookiePopupMessage}</p>
-                    {extCookiePopupLink && <a href={extCookiePopupLink} target="_blank" rel="noopener noreferrer">Click here to open</a>}
-                    <button onClick={() => {
-                        setShowExtCookiePopup(false);
-                        extensionExists === false ? checkForExtension() : extractCookies();
-                    }}>OK</button>
-                    <button onClick={() => setShowExtCookiePopup(false)}>Cancel</button>
+                <div className="popup-overlay">
+                    <div className="popup-content">
+                        <div>{extCookiePopupMessage}</div>
+                        {extCookiePopupLink && <a href={extCookiePopupLink} target="_blank" rel="noopener noreferrer">Click here to open</a>}
+                        <div>
+                            <button onClick={() => {
+                                setShowExtCookiePopup(false);
+                                extensionExists === false ? checkForExtension() : extractCookies();
+                            }}>OK</button>
+                            <button onClick={() => setShowExtCookiePopup(false)}>Cancel</button>
+                        </div>
+                    </div>
                 </div>
             )}
 

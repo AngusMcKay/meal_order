@@ -224,8 +224,10 @@ app.post("/store-cookies", async (req, res) => {
     try {
         const { cookies } = req.body;
         // NEED TO GET USERNAME AND STORE ENCRYPTED COOKIES IN DATABASE
-        fs.writeFileSync("retrievedCookies.json", JSON.stringify(cookies, null, 2));
-        console.log("Message Received");
+        fs.writeFileSync("saved_cookies_morrisons.json", JSON.stringify(cookies, null, 2));
+        console.log("Cookies saved");
+
+        res.json({ success: true, message: "Cookies saved" })
     } catch (error) {
         res.status(500).json({ message: "Error storing cookies", error });
     }
@@ -287,14 +289,20 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
             console.log("Existing cookies found, applying and confirming log in status");
             let saved_cookies = JSON.parse(fs.readFileSync("saved_cookies_morrisons.json"));
             // Add cookies from previous logged in session (note that site needs to be opened before cookies can be applied)
-            for (let cookie of saved_cookies) {
-                try {
-                    await driver.manage().addCookie(cookie);
-                } catch (err) {
-                    console.warn(`⚠️ Failed to add cookie: ${cookie.name}`);
-                } finally {
-                    console.log(`Successfully added cookie: ${cookie.name}`);
+            
+            try {
+                for (let cookie of saved_cookies) {
+                    try {
+                        await driver.manage().addCookie(cookie);
+                    } catch (err) {
+                        console.warn(`⚠️ Failed to add cookie: ${cookie.name}`);
+                    } finally {
+                        console.log(`Successfully added cookie: ${cookie.name}`);
+                    }
                 }
+            } catch {
+                console.log("Cookies found but couldn't be applied, formatting must be wrong, try to extract again");
+                return res.json({ success: false, reason: "cookies needed" });
             }
 
             // Login detection method 1: check whether login dropdown still exists
