@@ -294,10 +294,10 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                 for (let cookie of saved_cookies) {
                     try {
                         await driver.manage().addCookie(cookie);
+                        console.log(`Successfully added cookie: ${cookie.name}`);
                     } catch (err) {
                         console.warn(`⚠️ Failed to add cookie: ${cookie.name}`);
                     } finally {
-                        console.log(`Successfully added cookie: ${cookie.name}`);
                     }
                 }
             } catch {
@@ -423,10 +423,10 @@ app.post("/run-selenium-morrisons-order-orig", async (req, res) => {
             for (let cookie of saved_cookies) {
                 try {
                     await driver.manage().addCookie(cookie);
+                    console.log(`Successfully added cookie: ${cookie.name}`);
                 } catch (err) {
                     console.warn(`⚠️ Failed to add cookie: ${cookie.name}`);
                 } finally {
-                    console.log(`Successfully added cookie: ${cookie.name}`);
                 }
             }
 

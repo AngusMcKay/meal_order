@@ -82,4 +82,20 @@ export const LoadingBasketPopup = ({ loadingBasketPopup, loadingBasket, setLoadi
 	);
 };
 
-
+export const ExtCookiePopup = ({ extCookiePopupMessage, extCookiePopupLink, setShowExtCookiePopup, extensionExists, checkForExtension, extractCookies, extCookiePopupLinkText }) => {
+	return (
+		<div className="popup-overlay">
+            <div className="popup-content">
+                <div className="popup-description">{extCookiePopupMessage}</div>
+                {extCookiePopupLink && <div className="popup-cookie-link"><a href={extCookiePopupLink} target="_blank" rel="noopener noreferrer">{extCookiePopupLinkText}</a></div>}
+                <div>
+                    <button className="popup-cookie-ok-button" onClick={() => {
+                        setShowExtCookiePopup(false);
+                        extensionExists === false ? checkForExtension() : extractCookies();
+                    }}>OK</button>
+                    <button className="popup-cookie-cancel-button" onClick={() => setShowExtCookiePopup(false)}>Cancel</button>
+                </div>
+            </div>
+        </div>
+	);
+};

@@ -5,10 +5,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
-
-// Set up socket.io for order progress updates
 import io from "socket.io-client";
+
+const EXTENSION_ID = process.env.REACT_APP_EXTENSION_ID;
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
+const GROCERY_SITE_URL = process.env.REACT_APP_GROCERY_SITE_URL;
+
 const socket = io(`${API_BASE_URL}`, { transports: ["websocket"] });
 socket.on("connect", () => {
     console.log("🟢 Connected to Socket.IO server");
@@ -53,6 +55,13 @@ const CreateMeals = () => {
     const [imageBase64, setImageBase64] = useState(null);
     const [hoveredItem, setHoveredItem] = useState(null);
     const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+
+    // cookies stuff
+    const [extensionExists, setExtensionExists] = useState(null);
+    const [showExtCookiePopup, setShowExtCookiePopup] = useState(false);
+    const [extCookiePopupMessage, setExtCookiePopupMessage] = useState("");
+    const [extCookiePopupLink, setExtCookiePopupLink] = useState("");
+    const [extCookiePopupLinkText, setExtCookiePopupLinkText] = useState("Click here to open");
 
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
@@ -355,6 +364,52 @@ const CreateMeals = () => {
         }
     };
 
+    const handleAddExternalToMeal = async (itemToAdd) => {
+        const newItemsList = mealItems;
+        newItemsList.push(itemToAdd);
+        setMealItems(newItemsList);
+        setMeals((prevMeals) => {
+            const updatedMeals = prevMeals.map((meal) => {
+                if (meal.name === selectedMeal) {
+                    return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
+                }
+                return meal;
+            });
+            return updatedMeals;
+        });
+        if (editedMeals.some(item => selectedMeal === item)) {
+            setEditedMeals([...editedMeals, selectedMeal]);
+        }
+
+        // Also add to database
+        try {
+            await fetch(`${API_BASE_URL}/add-new-items`, {
+                method: "POST",
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
+                body: JSON.stringify({ items: [itemToAdd] }),
+            });
+
+            setItems((prevItems) => {
+                const updatedItems = [...prevItems]; // copy existing
+
+                [itemToAdd].forEach(newItem => {
+                    const index = updatedItems.findIndex(item => item.retailerProductId === newItem.retailerProductId);
+
+                    if (index !== -1) {
+                        updatedItems[index] = newItem;
+                    } else {
+                        updatedItems.push(newItem);
+                    }
+                });
+
+                return updatedItems;
+            });
+        } catch (error) {
+            console.error("Error adding items:", error);
+        }
+    };
+
+
     const popupClose = () => {
         setExternalResults([]);
         setShowPopup(false);
@@ -363,11 +418,17 @@ const CreateMeals = () => {
 
     const loadBasket = async (orderList) => {
         setFailedItems([]);
+        let orderResponse = {};
         let orderFails = [];
         try {
             setLoadingBasketPopup(true);
             setLoadingBasket(true);
-            orderFails = await loadBasketMorrisons(orderList);
+            orderResponse = await loadBasketMorrisons(orderList);
+            if (orderResponse.success === true) {
+                orderFails = orderResponse.failedItems;
+            } else {
+                checkForExtension();
+            }
         } catch (error) {
             console.error("Error exporting items:", error);
         } finally {
@@ -380,6 +441,115 @@ const CreateMeals = () => {
         setLoadingBasketPopup(false);
         setLoadingBasket(false);
         setFailedItems([]);
+    };
+
+    const checkForExtension = (initOrOngoing) => {
+        console.log(`Attempting to connect to extension ${EXTENSION_ID}`)
+        
+        let extMessage = ""
+        if (initOrOngoing === 'init') {
+            extMessage = "A Chrome browser extension is required for this app to work. Please install it and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon.";
+        } else {
+            extMessage = "Still unable to detect the required Chrome browser extension. Please confirm it is installed and activated and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon.";
+        }
+        if (!window.chrome || !window.chrome.runtime || !window.chrome.runtime.sendMessage) {
+            console.log("❌ Chrome extension API not available");
+            setExtCookiePopupMessage(extMessage);
+            setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
+            setExtCookiePopupLinkText("Click here to go to extension install page");
+            setShowExtCookiePopup(true);
+            setExtensionExists(false);
+            setLoadingBasketPopup(false);
+            setLoadingBasket(false);
+            return;
+        }
+
+        window.chrome.runtime.sendMessage(EXTENSION_ID, { action: "ping" }, (response) => {
+            if (window.chrome.runtime.lastError) {
+                console.error("❌ Error:", window.chrome.runtime.lastError.message);
+                setExtCookiePopupMessage(extMessage);
+                setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
+                setExtCookiePopupLinkText("Click here to go to extension install page");
+                setShowExtCookiePopup(true);
+                setExtensionExists(false);
+                setLoadingBasketPopup(false);
+                setLoadingBasket(false);
+            } else if (!response) {
+                console.log("❌ Extension NOT found - can't find.");
+                setExtCookiePopupMessage(extMessage);
+                setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
+                setExtCookiePopupLinkText("Click here to go to extension install page");
+                setShowExtCookiePopup(true);
+                setExtensionExists(false);
+                setLoadingBasketPopup(false);
+                setLoadingBasket(false);
+            } else {
+                console.log("✅ Extension found.");
+                setExtensionExists(true);
+                extractCookies(initOrOngoing);
+            }
+        });
+
+    };
+
+    const extractCookies = (initOrOngoing) => {
+        let extMessage = ""
+        if (initOrOngoing === 'init') {
+            extMessage = "A Chrome browser extension is required for this app to work. Please install it and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon.";
+        } else {
+            extMessage = "Still unable to detect the required Chrome browser extension. Please confirm it is installed and activated and click OK once done. Chrome is the only supported browser at this stage. Additional browser support will be added soon.";
+        }
+        if (!window.chrome || !window.chrome.runtime) {
+            console.log("❌ Chrome extension API not available.");
+            setExtCookiePopupMessage(extMessage);
+            setExtCookiePopupLink(`https://chrome.google.com/webstore/detail/${EXTENSION_ID}`); // Replace with actual extension link
+            setExtCookiePopupLinkText("Click here to go to extension install page");
+            setShowExtCookiePopup(true);
+            setExtensionExists(false);
+            setLoadingBasketPopup(false);
+            setLoadingBasket(false);
+            return;
+        }
+
+        window.chrome.runtime.sendMessage(EXTENSION_ID, { action: "extract_cookies" }, (response) => {
+            if (window.chrome.runtime.lastError) {
+                console.error("Error communicating with extension:", window.chrome.runtime.lastError.message);
+            } else if (!response || response.error) {
+                console.error("Error extracting cookies:", response ? response.error : "Unknown error");
+            } else {
+                console.log("✅ Cookies received from extension:", response.cookies);
+                checkExtractedCookies(response.cookies);
+            }
+        });
+    };
+
+    const checkExtractedCookies = async (cookies) => {
+        const relevantCookies = cookies.filter(cookie => cookie.domain.includes("morrisons.com")); // Add more constraints: cookie.name === "session" && cookie.domain.includes("morrisons.com")
+
+        if (relevantCookies.length > 0) {
+            console.log("✅ Required cookies are present. Saving..");
+            const saving_response = await fetch(`http://localhost:5000/store-cookies`, {
+                method: "POST",
+                headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
+                body: JSON.stringify({ cookies: relevantCookies }),
+            });
+
+            const data = await saving_response.json();
+            if (data.success) {
+                console.log(data.message);
+                loadBasket(orderList);
+                setShowExtCookiePopup(false);
+            } else {
+                console.log("Failed to save cookies");
+            }
+            
+        } else {
+            console.log("❌ Required cookies NOT found.");
+            setExtCookiePopupMessage("Store login needed before app can proceed. Please follow the link below to login and click OK once done.");
+            setExtCookiePopupLink(GROCERY_SITE_URL);
+            setExtCookiePopupLinkText(`Click here to log in to ${GROCERY_SITE_URL}`);
+            setShowExtCookiePopup(true);
+        }
     };
 
     // Meal auto generation
@@ -796,7 +966,7 @@ const CreateMeals = () => {
                 </div>
             )}
 
-            {/* POPUP */}
+            {/* External search popup */}
             {showPopup && (
                 <div className="popup-overlay">
                     <div className="popup-content">
@@ -842,6 +1012,7 @@ const CreateMeals = () => {
                                                     >view ⎘</a>
                                                 </sup>
                                             </span>
+                                            <button className="add-item-button" onClick={() => handleAddExternalToMeal(item)}>Add</button>
                                         </div>
                                     ))}
                                 </div>
