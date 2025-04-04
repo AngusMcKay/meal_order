@@ -434,6 +434,75 @@
     transition: transform 0.3s ease-in-out;
 }
 
+.add-row-button {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.add-row-icon {
+    margin-right: 5px;
+    font-size: 16px;
+}
+
+.remove-item-button {
+    color: #C04000;
+    font-weight: bold;
+    font-size: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.save-item-button-meals {
+    margin-left: 5px;
+    font-size: 20px;
+    background: none;
+    border: none;
+    color: #DBA400;
+    cursor: pointer;
+}
+
+.create-meal-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #444;
+    font-size: 30px;
+}
+
+.add-row-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.add-row-button {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.add-row-icon {
+    margin-right: 5px;
+    font-size: 16px;
+}
+
 .search-items-create {
     min-width: 400px;
     display: flex;

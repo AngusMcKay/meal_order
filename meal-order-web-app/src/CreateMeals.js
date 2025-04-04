@@ -32,6 +32,9 @@ const CreateMeals = () => {
     const [newItemLink, setNewItemLink] = useState("");
     const [newItemTags, setNewItemTags] = useState("");
     const [newItemImage, setNewItemImage] = useState("");
+    const [itemRows, setItemRows] = useState([
+        { name: "", size: "", link: "", tags: "", isSaved: false }
+    ]);
     const [orderList, setOrderList] = useState(() => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
@@ -133,13 +136,9 @@ const CreateMeals = () => {
     };
 
     const handleSelectMeal = (meal) => {
-        let mealRecipe = ""
-        if (meal.recipe) {
-            mealRecipe = meal.recipe;
-        }
         setSelectedMeal(meal.name);
-        setMealItems(meal.items);
-        setRecipeLink(mealRecipe)
+        setMealItems(meal.items || []); // Populate rows with meal items
+        setRecipeLink(meal.recipe || "");
         setEditingMode(true);
         setIsMealPopupOpen(true);
     };
@@ -325,23 +324,37 @@ const CreateMeals = () => {
         }
     };
 
-    const handleAddNewItemToMeal = () => {
-        const newItem = { name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags) };
-        const newItemsList = mealItems;
-        newItemsList.push(newItem);
+    const handleAddNewItemToMeal = (rowIndex) => {
+        const newItem = {
+            name: itemRows[rowIndex].name,
+            size: itemRows[rowIndex].size,
+            link: itemRows[rowIndex].link,
+            tags: parseTags(itemRows[rowIndex].tags)
+        };
+    
+        // Add the new item to the meal
+        const newItemsList = [...mealItems, newItem];
         setMealItems(newItemsList);
-        setMeals((prevMeals) => {
-            const updatedMeals = prevMeals.map((meal) => {
-                if (meal.name === selectedMeal) {
-                    return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
-                }
-                return meal;
-            });
-            return updatedMeals;
-        });
-        if (editedMeals.some(item => selectedMeal === item)) {
-            setEditedMeals([...editedMeals, selectedMeal]);
-        }
+    
+        // Mark the current row as saved
+        const updatedRows = [...itemRows];
+        updatedRows[rowIndex].isSaved = true;
+        setItemRows([...updatedRows, { name: "", size: "", link: "", tags: "", isSaved: false }]);
+    };
+    
+    const handleRowChange = (rowIndex, field, value) => {
+        const updatedRows = [...mealItems];
+        updatedRows[rowIndex][field] = value;
+        setMealItems(updatedRows);
+    };
+    
+    const handleAddRow = () => {
+        setMealItems([...mealItems, { name: "", size: "", link: "", tags: "" }]);
+    };
+
+    const handleRemoveRow = (rowIndex) => {
+        const updatedItems = mealItems.filter((_, index) => index !== rowIndex);
+        setMealItems(updatedItems);
     };
 
     const removeCartItem = (mealIndex, itemIndex) => {
@@ -427,10 +440,10 @@ const CreateMeals = () => {
     };
 
     const handleAddExternalToMeal = async (itemToAdd) => {
-        const newItemsList = mealItems;
-        newItemsList.push(itemToAdd);
+        // Add the new item to the mealItems array
+        const newItemsList = [...mealItems, itemToAdd];
         setMealItems(newItemsList);
-        setMeals((prevMeals) => {
+        /*setMeals((prevMeals) => {
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
                     return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
@@ -468,7 +481,7 @@ const CreateMeals = () => {
             });
         } catch (error) {
             console.error("Error adding items:", error);
-        }
+        }*/
     };
 
     const popupClose = () => {
@@ -937,43 +950,52 @@ const CreateMeals = () => {
                                 <hr className='page-break-line'></hr>
 
                                 <div className="select-item-category">
-                                    <span className="create-item-title" data-tooltip="Create items to add to Shopping List or save item for later use. Tagging items (e.g. freezer) will make it easier to filter and streamline Shopping List creation.">
-                                    <span className="info-sign">ⓘ</span> Add new item: 
-                                    </span>
-                                    <input 
-                                        type="text"
-                                        placeholder="Item name"
-                                        className="create-item-name"
-                                        value={newItemName}
-                                        onChange={(e) => setNewItemName(e.target.value)}
-                                        title="Required: item name"
-                                    />
-                                    <input 
-                                        type="text"
-                                        placeholder="Size*"
-                                        className="create-item-quantity"
-                                        value={newItemQuantity}
-                                        onChange={(e) => setNewItemQuantity(e.target.value)}
-                                        title="Optional: add a link to external site for future reference"
-                                    />
-                                    <input 
-                                        type="text"
-                                        placeholder="Link*"
-                                        className="create-item-link"
-                                        value={newItemLink}
-                                        onChange={(e) => setNewItemLink(e.target.value)}
-                                        title="Optional: add a link to external site for future reference"
-                                    />
-                                    <input 
-                                        type="text"
-                                        placeholder="Tags*"
-                                        className="create-item-tags"
-                                        value={newItemTags}
-                                        onChange={(e) => setNewItemTags(e.target.value)}
-                                        title="Optional: add tags separated by spaces and/or commas to help with filtering saved items"
-                                    />
-                                    <button className="save-item-button" onClick={() => handleAddNewItemToMeal()}>Add to Meal</button>
-                                    <button className="save-item-button" onClick={() => handleSaveItem()}>Save Item</button>
+                                    <div className="create-meal-title" data-tooltip="Add items to meal. Adding links will help speed up ordering. Adding tags and saving items to pre-saved items list will enable easier filtering and finding items again in future.">
+                                        <span className="info-sign">ⓘ</span> {selectedMeal}
+                                    </div>
+                                    {mealItems.map((item, index) => (
+                                        <div key={index} className="item-row">
+                                            <input
+                                                type="text"
+                                                placeholder="Item name"
+                                                className="create-item-name"
+                                                value={item.name}
+                                                onChange={(e) => handleRowChange(index, "name", e.target.value)}
+                                                title="Required: item name"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Size*"
+                                                className="create-item-quantity"
+                                                value={item.size}
+                                                onChange={(e) => handleRowChange(index, "size", e.target.value)}
+                                                title="Optional: size or quantity"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Link*"
+                                                className="create-item-link"
+                                                value={item.link}
+                                                onChange={(e) => handleRowChange(index, "link", e.target.value)}
+                                                title="Optional: add a link to external site for future reference"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Tags*"
+                                                className="create-item-tags"
+                                                value={item.tags}
+                                                onChange={(e) => handleRowChange(index, "tags", e.target.value)}
+                                                title="Optional: add tags separated by spaces and/or commas"
+                                            />
+                                            <button className="remove-item-button" onClick={() => handleRemoveRow(index)} title="Remove this item">✖</button>
+                                            <button className="save-item-button-meals" onClick={() => handleSaveItem()} title="Add to pre-saved items">☰+</button>
+                                        </div>
+                                    ))}
+                                    <div className="add-row-container">
+                                        <button className="add-row-button" onClick={handleAddRow}>
+                                            <span className="add-row-icon">➕</span> Add another item
+                                        </button>
+                                    </div>
                                     <div className="external-search-link" onClick={() => setShowPopup(true)}>
                                         Search store for items
                                     </div>
