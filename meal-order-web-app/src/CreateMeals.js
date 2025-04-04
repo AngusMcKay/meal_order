@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 import io from "socket.io-client";
+import { useUser } from "./context/UserContext";
 
 const EXTENSION_ID = process.env.REACT_APP_EXTENSION_ID;
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
@@ -17,6 +18,7 @@ socket.on("connect", () => {
 });
 
 const CreateMeals = () => {
+    const { user, saveMeal, saveItem, deleteMeal } = useUser();
     const [meals, setMeals] = useState([]);
     const [editedMeals, setEditedMeals] = useState([]);
     const [items, setItems] = useState([]);
@@ -25,6 +27,11 @@ const CreateMeals = () => {
     const [selectedMeal, setSelectedMeal] = useState(null);
     const [mealItems, setMealItems] = useState([]);
     const [error, setError] = useState("");
+    const [newItemName, setNewItemName] = useState("");
+    const [newItemQuantity, setNewItemQuantity] = useState("");
+    const [newItemLink, setNewItemLink] = useState("");
+    const [newItemTags, setNewItemTags] = useState("");
+    const [newItemImage, setNewItemImage] = useState("");
     const [orderList, setOrderList] = useState(() => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
@@ -216,12 +223,17 @@ const CreateMeals = () => {
     };
 
     const handleStoreMeal = async () => {
+
         if (!selectedMeal) {
             alert("Please select a meal to save.");
             return;
         }
         try {
-            const response = await fetch(`${API_BASE_URL}/upsert-meal`, {
+
+            const data = await saveMeal({ name: selectedMeal, items: mealItems, recipe: recipeLink, tags: [] });
+            
+            // DEPRECATED: previous store meal which sends meals to generic meals collection in back end (replaced by meals being saved to user)
+            /*const response = await fetch(`${API_BASE_URL}/upsert-meal`, {
                 method: "POST",
                 headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -231,9 +243,10 @@ const CreateMeals = () => {
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json();*/
+
             if (data.success) {
-                toast.success("Meal saved successfully!", { position: "top-center" });
+                toast.success("Meal saved!", { position: "top-center" });
             } else {
                 toast.error("Error saving meal.", { position: "top-center" });
             }
@@ -281,6 +294,54 @@ const CreateMeals = () => {
         setEditingMode(false);
         setSelectedMeal(null);
         setIsMealPopupOpen(false);
+    };
+
+    const parseTags = (input) => {
+        return input
+            .replace(/,/g, " ") // Replace commas with spaces
+            .split(/\s+/) // Split by any number of spaces
+            .filter(tag => tag.trim() !== "") // Remove empty values
+            .map(tag => tag.toLowerCase()); // Convert to lowercase
+    };
+
+    const handleSaveItem = async () => {
+
+        if (!newItemName) {
+            alert("Please enter item name");
+            return;
+        }
+        try {
+
+            const data = await saveItem({ name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags), image: {src: newItemImage} });
+
+            if (data.success) {
+                toast.success("Item saved!", { position: "top-center" });
+            } else {
+                toast.error("Error saving item", { position: "top-center" });
+            }
+        } catch (error) {
+            console.error("Error saving meal:", error);
+            toast.error("Server error", { position: "top-center" });
+        }
+    };
+
+    const handleAddNewItemToMeal = () => {
+        const newItem = { name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags) };
+        const newItemsList = mealItems;
+        newItemsList.push(newItem);
+        setMealItems(newItemsList);
+        setMeals((prevMeals) => {
+            const updatedMeals = prevMeals.map((meal) => {
+                if (meal.name === selectedMeal) {
+                    return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
+                }
+                return meal;
+            });
+            return updatedMeals;
+        });
+        if (editedMeals.some(item => selectedMeal === item)) {
+            setEditedMeals([...editedMeals, selectedMeal]);
+        }
     };
 
     const removeCartItem = (mealIndex, itemIndex) => {
@@ -332,6 +393,7 @@ const CreateMeals = () => {
         }
     };
 
+    // DEPRECATED - no longer storing items to global database, instead saving select list of items for each individual
     const addNewItems = async () => {
         try {
             await fetch(`${API_BASE_URL}/add-new-items`, {
@@ -408,7 +470,6 @@ const CreateMeals = () => {
             console.error("Error adding items:", error);
         }
     };
-
 
     const popupClose = () => {
         setExternalResults([]);
@@ -873,8 +934,56 @@ const CreateMeals = () => {
                                     </div>
                                 )}
 
+                                <hr className='page-break-line'></hr>
+
+                                <div className="select-item-category">
+                                    <span className="create-item-title" data-tooltip="Create items to add to Shopping List or save item for later use. Tagging items (e.g. freezer) will make it easier to filter and streamline Shopping List creation.">
+                                    <span className="info-sign">ⓘ</span> Add new item: 
+                                    </span>
+                                    <input 
+                                        type="text"
+                                        placeholder="Item name"
+                                        className="create-item-name"
+                                        value={newItemName}
+                                        onChange={(e) => setNewItemName(e.target.value)}
+                                        title="Required: item name"
+                                    />
+                                    <input 
+                                        type="text"
+                                        placeholder="Size*"
+                                        className="create-item-quantity"
+                                        value={newItemQuantity}
+                                        onChange={(e) => setNewItemQuantity(e.target.value)}
+                                        title="Optional: add a link to external site for future reference"
+                                    />
+                                    <input 
+                                        type="text"
+                                        placeholder="Link*"
+                                        className="create-item-link"
+                                        value={newItemLink}
+                                        onChange={(e) => setNewItemLink(e.target.value)}
+                                        title="Optional: add a link to external site for future reference"
+                                    />
+                                    <input 
+                                        type="text"
+                                        placeholder="Tags*"
+                                        className="create-item-tags"
+                                        value={newItemTags}
+                                        onChange={(e) => setNewItemTags(e.target.value)}
+                                        title="Optional: add tags separated by spaces and/or commas to help with filtering saved items"
+                                    />
+                                    <button className="save-item-button" onClick={() => handleAddNewItemToMeal()}>Add to Meal</button>
+                                    <button className="save-item-button" onClick={() => handleSaveItem()}>Save Item</button>
+                                    <div className="external-search-link" onClick={() => setShowPopup(true)}>
+                                        Search store for items
+                                    </div>
+                                </div>
+
+                                <hr className='page-break-line'></hr>
+
                                 <div className="search-items-create">
                                     <div className="search-bar-container">
+                                        <span className="create-item-title">Search pre-saved items: </span>
                                         <input
                                             className="search-bar-create" 
                                             type="text" 
@@ -882,15 +991,12 @@ const CreateMeals = () => {
                                             value={search} 
                                             onChange={(e) => setSearch(e.target.value)}
                                         />
-                                        {search && (
+                                        {/*{search && (
                                             <button title="If you can't find an item in the app (or via the exteral search link below) you can add the search term as a placeholder reminder to add it directly from the grocery store later." className='add-placeholder' onClick={() => handleAddPlaceholderItemToMeal(search)}>
                                             Add item placeholder ⓘ
                                             </button>
-                                        )}
+                                        )}*/}
                                     </div>
-                                    <span className="external-search-link-create" onClick={() => setShowPopup(true)}>
-                                        Can't find what you're looking for?
-                                    </span>
                                     {loading ? (
                                         <div className="loading-message-create">Finding items...<div className="loading-spinner"></div></div>
                                     ) : (

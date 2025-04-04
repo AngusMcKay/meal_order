@@ -4,9 +4,11 @@ import HomePage from "./HomePage";
 import SelectMeals from "./SelectMeals"
 import SelectItems from "./SelectItems"
 import CreateMeals from "./CreateMeals"
+import { UserContextProvider } from "./context/UserContext";
 
 function App() {
     return (
+      <UserContextProvider>
         <Router>
             <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -15,6 +17,7 @@ function App() {
                 <Route path="/create-meals" element={<CreateMeals />} />
             </Routes>
         </Router>
+      </UserContextProvider>
     );
 }
 

@@ -4,6 +4,7 @@ import "./Generic.css";
 import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 import io from "socket.io-client";
+import { useUser } from "./context/UserContext";
 
 const EXTENSION_ID = process.env.REACT_APP_EXTENSION_ID;
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
@@ -15,6 +16,7 @@ socket.on("connect", () => {
 });
 
 const SelectMeals = () => {
+    const { user, saveMeal, saveItem, deleteMeal } = useUser();
     const [mealsData, setMealsData] = useState([]);
     const [selectedMeal, setSelectedMeal] = useState("");
     const [selectedItems, setSelectedItems] = useState({});

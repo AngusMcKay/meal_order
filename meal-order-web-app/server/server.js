@@ -7,7 +7,7 @@ const fs = require("fs");
 const axios = require("axios");
 const https = require('https');
 const OpenAI = require("openai");
-//import OpenAI from "openai";
+const userRoutes = require("./userRoutes");
 
 const app = express();
 app.use(cors({
@@ -24,6 +24,7 @@ app.use(cors({
 })); // Important for cookies/sessions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use("/user", userRoutes);
 
 // Logging activity to help debugging
 app.use((req, res, next) => {
@@ -103,7 +104,7 @@ const Item = mongoose.model("Item", ItemSchema);
 // API to fetch meals
 app.get("/items", async (req, res) => {
     try {
-        const items = await Item.find({}, "_id productId retailerProductId name price size image.src");
+        const items = await Item.find({}, "_id productId retailerProductId name price size image.src").limit(100);
         
         res.json(items);
     } catch (err) {
@@ -346,12 +347,12 @@ app.post("/run-selenium-morrisons-order", async (req, res) => {
                     try { // Must be a better way to do this?
                         await driver.get(productUrl);
                         io.emit("orderProgress", `Finding and adding ${item.name}...    `);
-                        let a1 = `@aria-label='Add ${item.name} to basket'`
-                        let a2 = `@aria-label='Add ${item.name}  to basket'`
-                        let a3 = `@aria-label='Add ${item.name}   to basket'`
-                        let i1 = `@aria-label='Increase quantity of ${item.name} in trolley'`
-                        let i2 = `@aria-label='Increase quantity of ${item.name}  in trolley'`
-                        let i3 = `@aria-label='Increase quantity of ${item.name}   in trolley'`
+                        let a1 = `@aria-label="Add ${item.name} to basket"`
+                        let a2 = `@aria-label="Add ${item.name}  to basket"`
+                        let a3 = `@aria-label="Add ${item.name}   to basket"`
+                        let i1 = `@aria-label="Increase quantity of ${item.name} in trolley"`
+                        let i2 = `@aria-label="Increase quantity of ${item.name}  in trolley"`
+                        let i3 = `@aria-label="Increase quantity of ${item.name}   in trolley"`
 
                         let addButton = await driver.wait(until.elementLocated(By.xpath(
                             `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);
@@ -506,12 +507,12 @@ app.post("/run-selenium-morrisons-order-orig", async (req, res) => {
                 try { // Must be a better way to do this?
                     await driver.get(productUrl);
                     io.emit("orderProgress", `Finding and adding ${item.name}...    `);
-                    let a1 = `@aria-label='Add ${item.name} to basket'`
-                    let a2 = `@aria-label='Add ${item.name}  to basket'`
-                    let a3 = `@aria-label='Add ${item.name}   to basket'`
-                    let i1 = `@aria-label='Increase quantity of ${item.name} in trolley'`
-                    let i2 = `@aria-label='Increase quantity of ${item.name}  in trolley'`
-                    let i3 = `@aria-label='Increase quantity of ${item.name}   in trolley'`
+                    let a1 = `@aria-label="Add ${item.name} to basket"`
+                    let a2 = `@aria-label="Add ${item.name}  to basket"`
+                    let a3 = `@aria-label="Add ${item.name}   to basket"`
+                    let i1 = `@aria-label="Increase quantity of ${item.name} in trolley"`
+                    let i2 = `@aria-label="Increase quantity of ${item.name}  in trolley"`
+                    let i3 = `@aria-label="Increase quantity of ${item.name}   in trolley"`
 
                     let addButton = await driver.wait(until.elementLocated(By.xpath(
                         `//button[${a1} or ${a2} or ${a3} or ${i1} or ${i2} or ${i3}]`)), 5000);

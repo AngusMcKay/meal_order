@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./SelectItems.css";
 import "./Generic.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 import io from "socket.io-client";
+import { useUser } from "./context/UserContext";
 
 const EXTENSION_ID = process.env.REACT_APP_EXTENSION_ID;
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
@@ -15,9 +18,16 @@ socket.on("connect", () => {
 });
 
 const SelectItems = () => {
+    const { user, saveMeal, saveItem, deleteMeal } = useUser();
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
+    const [searchExternal, setSearchExternal] = useState("");
     const [customHeading, setCustomHeading] = useState("Individual Items");
+    const [newItemName, setNewItemName] = useState("");
+    const [newItemQuantity, setNewItemQuantity] = useState("");
+    const [newItemLink, setNewItemLink] = useState("");
+    const [newItemTags, setNewItemTags] = useState("");
+    const [newItemImage, setNewItemImage] = useState("");
     const [orderList, setOrderList] = useState(() => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
@@ -83,6 +93,48 @@ const SelectItems = () => {
             });
     }, []);
 
+    const parseTags = (input) => {
+        return input
+            .replace(/,/g, " ") // Replace commas with spaces
+            .split(/\s+/) // Split by any number of spaces
+            .filter(tag => tag.trim() !== "") // Remove empty values
+            .map(tag => tag.toLowerCase()); // Convert to lowercase
+    };
+
+    const handleSaveItem = async () => {
+
+        if (!newItemName) {
+            alert("Please enter item name");
+            return;
+        }
+        try {
+
+            const data = await saveItem({ name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags), image: {src: newItemImage} });
+
+            if (data.success) {
+                toast.success("Item saved!", { position: "top-center" });
+            } else {
+                toast.error("Error saving item", { position: "top-center" });
+            }
+        } catch (error) {
+            console.error("Error saving meal:", error);
+            toast.error("Server error", { position: "top-center" });
+        }
+    };
+
+    const handleAddNewItemToOrder = () => {
+        const newItem = { name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags) };
+        setOrderList((prevOrders) => {
+            const existingCategory = prevOrders.find(order => order.meal.toLowerCase() === customHeading.toLowerCase());
+            if (existingCategory) {
+                return prevOrders.map(order =>
+                    order.meal.toLowerCase() === customHeading.toLowerCase() ? { ...order, items: [...order.items, newItem] } : order
+                );
+            }
+            return [...prevOrders, { meal: customHeading, items: [newItem] }];
+        });
+    };
+
     const handleAddToOrder = (item) => {
         setOrderList((prevOrders) => {
             const existingCategory = prevOrders.find(order => order.meal.toLowerCase() === customHeading.toLowerCase());
@@ -143,6 +195,7 @@ const SelectItems = () => {
         }
     };
 
+    // DEPRECATED, was used for saving externally found items to database of all items but now storing items separately for each individual user
     const addNewItems = async () => {
         try {
             await fetch(`${API_BASE_URL}/add-new-items`, {
@@ -186,8 +239,8 @@ const SelectItems = () => {
             return [...prevOrders, { meal: customHeading, items: [itemToAdd] }];
         });
 
-        // Also add to database
-        try {
+        // Also add to database - DEPRECATED, ITEMS NOW STORED FOR INDIVIDUAL USERS
+        /*try {
             await fetch(`${API_BASE_URL}/add-new-items`, {
                 method: "POST",
                 headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
@@ -212,6 +265,16 @@ const SelectItems = () => {
 
         } catch (error) {
             console.error("Error adding items:", error);
+        }*/
+    };
+
+    const handleLinkExternalToNewItem = (itemToLink) => {
+        setNewItemLink(`https://groceries.morrisons.com/products/${itemToLink.retailerProductId}`);
+        setNewItemImage(itemToLink.image.src);
+        setNewItemQuantity(itemToLink.size.value);
+
+        if (newItemName === "") {
+            setNewItemName(itemToLink.name);
         }
     };
 
@@ -397,7 +460,7 @@ const SelectItems = () => {
 
             <div className="bottom-section">
                 <p className="items-description">
-                    Seach for and select individual items to add to order
+                    Add new or select saved items to add to shopping lists. Tag items for filtering to speed up list creation. Add links to streamline ordering.
                 </p>
                 <div className="select-item-category">
                     <span className="select-item-category-title" data-tooltip="Any items added will be shown under this heading in the shopping list">
@@ -411,7 +474,56 @@ const SelectItems = () => {
                         onChange={(e) => setCustomHeading(e.target.value)}
                     />
                 </div>
-                <div className="select-item-search">
+
+                <hr className='page-break-line'></hr>
+
+                <div className="select-item-category">
+                    <span className="create-item-title" data-tooltip="Create new items and add to Shopping List or save for adding later. Tagging items (e.g. freezer) will make it easier to filter and streamline Shopping List creation.">
+                    <span className="info-sign">ⓘ</span> Create new item: 
+                    </span>
+                    <input 
+                        type="text"
+                        placeholder="Item name"
+                        className="create-item-name"
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        title="Required: item name"
+                    />
+                    <input 
+                        type="text"
+                        placeholder="Size*"
+                        className="create-item-quantity"
+                        value={newItemQuantity}
+                        onChange={(e) => setNewItemQuantity(e.target.value)}
+                        title="Optional: add a link to external site for future reference"
+                    />
+                    <input 
+                        type="text"
+                        placeholder="Link*"
+                        className="create-item-link"
+                        value={newItemLink}
+                        onChange={(e) => setNewItemLink(e.target.value)}
+                        title="Optional: add a link to external site for future reference"
+                    />
+                    <input 
+                        type="text"
+                        placeholder="Tags*"
+                        className="create-item-tags"
+                        value={newItemTags}
+                        onChange={(e) => setNewItemTags(e.target.value)}
+                        title="Optional: add tags separated by spaces and/or commas to help with filtering saved items"
+                    />
+                    <button className="save-item-button" onClick={() => handleAddNewItemToOrder()}>Add to Shopping List</button>
+                    <button className="save-item-button" onClick={() => handleSaveItem()}>Save Item</button>
+                    <div className="external-search-link" onClick={() => setShowPopup(true)}>
+                        Search store for items
+                    </div>
+                </div>
+
+                <hr className='page-break-line'></hr>
+
+                <div className="select-item-category">
+                    <span className="create-item-title">Search pre-saved items: </span>
                     <input 
                         className="search-bar" 
                         type="text" 
@@ -419,9 +531,6 @@ const SelectItems = () => {
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    <div className="external-search-link" onClick={() => setShowPopup(true)}>
-                        Can't find what you're looking for?
-                    </div>
                 </div>
 
                 {loading ? (
@@ -474,16 +583,16 @@ const SelectItems = () => {
                     <div className="popup-content">
                         <span className="popup-close-button" onClick={() => popupClose()}>✖</span>
                         <h2 className="popup-title">Find more items</h2>
-                        <div className="popup-description">Search for more items from grocery suppliers and add them to the app</div>
+                        <div className="popup-description">Search selected store for an item to link to item being created</div>
                         <input
                             type="text"
-                            value={search}
+                            value={searchExternal}
                             placeholder="Search for an item..." 
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => setSearchExternal(e.target.value)}
                             className="popup-search-bar"
                         />
                         <div className="popup-controls">
-                            <button className="popup-search-button" onClick={() => findNewItems(search)}>
+                            <button className="popup-search-button" onClick={() => findNewItems(searchExternal)}>
                                 Search External Store
                             </button>
                         </div>
@@ -497,9 +606,6 @@ const SelectItems = () => {
 
                         {externalResults.length > 0 ? (
                             <>
-                                <button className="popup-add-items-db-button" onClick={addNewItems}>
-                                    Add Items to Database
-                                </button>
                                 <div className="items-list">
                                     {externalResults.map((item, index) => (
                                         <div key={index} className="item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
@@ -514,7 +620,8 @@ const SelectItems = () => {
                                                     >view ⎘</a>
                                                 </sup>
                                             </span>
-                                            <button className="add-item-button" onClick={() => handleAddExternalToOrder(item)}>Add</button>
+                                            <button className="add-item-button" onClick={() => handleAddExternalToOrder(item)}>Add to Shopping List</button>
+                                            <button className="add-item-button" onClick={() => handleLinkExternalToNewItem(item)}>Link to New Item</button>
                                         </div>
                                     ))}
                                 </div>

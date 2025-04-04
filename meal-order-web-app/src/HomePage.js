@@ -6,6 +6,7 @@ import "./Generic.css";
 import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup, ExtCookiePopup } from "./Generic.js";
 import io from "socket.io-client";
+import { useUser } from "./context/UserContext";
 
 const EXTENSION_ID = process.env.REACT_APP_EXTENSION_ID;
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
@@ -18,6 +19,7 @@ socket.on("connect", () => {
 });
 
 const HomePage = () => {
+    const { user, saveMeal, saveItem, deleteMeal } = useUser();
     const navigate = useNavigate();
     const [orderList, setOrderList] = useState(() => {
         const savedOrders = localStorage.getItem("orderList");
