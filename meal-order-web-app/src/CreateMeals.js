@@ -27,14 +27,7 @@ const CreateMeals = () => {
     const [selectedMeal, setSelectedMeal] = useState(null);
     const [mealItems, setMealItems] = useState([]);
     const [error, setError] = useState("");
-    const [newItemName, setNewItemName] = useState("");
-    const [newItemQuantity, setNewItemQuantity] = useState("");
-    const [newItemLink, setNewItemLink] = useState("");
-    const [newItemTags, setNewItemTags] = useState("");
-    const [newItemImage, setNewItemImage] = useState("");
-    const [itemRows, setItemRows] = useState([
-        { name: "", size: "", link: "", tags: "", isSaved: false }
-    ]);
+    const [extSearchItemIndex, setExtSearchItemIndex] = useState(null);
     const [orderList, setOrderList] = useState(() => {
         const savedOrders = localStorage.getItem("orderList");
         return savedOrders ? JSON.parse(savedOrders) : [];
@@ -46,7 +39,7 @@ const CreateMeals = () => {
     const [clearCartPopup, setClearCartPopup] = useState(false);
     const [editingMode, setEditingMode] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);
+    //const [isMealPopupOpen, setIsMealPopupOpen] = useState(false);  // DEPRECATED - now showing meals on main page
     const [recipeLink, setRecipeLink] = useState("");
     const [showPopup, setShowPopup] = useState(false);
     const [externalResults, setExternalResults] = useState([]);
@@ -130,7 +123,7 @@ const CreateMeals = () => {
         setSelectedMeal(newMealName);
         setMealItems([]);
         setEditingMode(true);
-        setIsMealPopupOpen(true);
+        //setIsMealPopupOpen(true); // DEPRECATED - now showing meals on main page
         setNewMealName("");
         setRecipeLink("");
     };
@@ -140,7 +133,7 @@ const CreateMeals = () => {
         setMealItems(meal.items || []); // Populate rows with meal items
         setRecipeLink(meal.recipe || "");
         setEditingMode(true);
-        setIsMealPopupOpen(true);
+        //setIsMealPopupOpen(true); // DEPRECATED - now showing meals on main page
     };
 
     const handleAddItemToMeal = (item) => {
@@ -161,6 +154,7 @@ const CreateMeals = () => {
         }
     };
 
+    // DEPRECATED - using handleRemoveRow now instead
     const handleRemoveMealItem = (index) => {
         const newItemsList = mealItems.filter((item, idx) => idx !== index);
         setMealItems(newItemsList);
@@ -186,6 +180,7 @@ const CreateMeals = () => {
         }
     };
 
+    // DEPRECATED - everything effectively now handled as placeholders
     const handleAddPlaceholderItemToMeal = (itemName) => {
         const placeholderItem = { name: itemName, type: "placeholder" }
         const newItemsList = mealItems;
@@ -292,7 +287,7 @@ const CreateMeals = () => {
     const handleGoBack = () => {
         setEditingMode(false);
         setSelectedMeal(null);
-        setIsMealPopupOpen(false);
+        //setIsMealPopupOpen(false); // DEPRECATED - now showing meals on main page
     };
 
     const parseTags = (input) => {
@@ -303,7 +298,14 @@ const CreateMeals = () => {
             .map(tag => tag.toLowerCase()); // Convert to lowercase
     };
 
-    const handleSaveItem = async () => {
+    const handleSaveItem = async (index) => {
+
+        const newItemName = mealItems[index].name;
+        const newItemQuantity = mealItems[index].size;
+        const newItemLink = mealItems[index].link;
+        const newItemTags = parseTags(mealItems[index].tags);
+        const newItemImage = mealItems[index].image.src;
+        const newItem = { name: newItemName, size: newItemQuantity, link: newItemLink, tags: newItemTags, image: {src: newItemImage} };
 
         if (!newItemName) {
             alert("Please enter item name");
@@ -311,7 +313,7 @@ const CreateMeals = () => {
         }
         try {
 
-            const data = await saveItem({ name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags), image: {src: newItemImage} });
+            const data = await saveItem(newItem);
 
             if (data.success) {
                 toast.success("Item saved!", { position: "top-center" });
@@ -322,24 +324,6 @@ const CreateMeals = () => {
             console.error("Error saving meal:", error);
             toast.error("Server error", { position: "top-center" });
         }
-    };
-
-    const handleAddNewItemToMeal = (rowIndex) => {
-        const newItem = {
-            name: itemRows[rowIndex].name,
-            size: itemRows[rowIndex].size,
-            link: itemRows[rowIndex].link,
-            tags: parseTags(itemRows[rowIndex].tags)
-        };
-    
-        // Add the new item to the meal
-        const newItemsList = [...mealItems, newItem];
-        setMealItems(newItemsList);
-    
-        // Mark the current row as saved
-        const updatedRows = [...itemRows];
-        updatedRows[rowIndex].isSaved = true;
-        setItemRows([...updatedRows, { name: "", size: "", link: "", tags: "", isSaved: false }]);
     };
     
     const handleRowChange = (rowIndex, field, value) => {
@@ -439,10 +423,40 @@ const CreateMeals = () => {
         }
     };
 
+    const handleSearchForRow = (rowIndex) => {
+        // Store the row index to apply results later
+        setExtSearchItemIndex(rowIndex);
+        setSearch(mealItems[rowIndex].name || ""); // Set the search term to the row's name
+        
+        setShowPopup(true); // Open the popup
+    };
+
     const handleAddExternalToMeal = async (itemToAdd) => {
         // Add the new item to the mealItems array
-        const newItemsList = [...mealItems, itemToAdd];
-        setMealItems(newItemsList);
+        const updatedItems = [...mealItems];
+            
+        // Check if a specific row index is stored in popupPosition and then don't replace existing names and sizes
+        if (extSearchItemIndex !== null) {
+            const itemName = mealItems[extSearchItemIndex].name || itemToAdd.name;
+            const itemSize = mealItems[extSearchItemIndex].size || itemToAdd.size? itemToAdd.size.value : "";
+            const itemLink = itemToAdd.retailerProductId? `https://groceries.morrisons.com/products/${itemToAdd.retailerProductId}`: "";
+            const itemTags = mealItems[extSearchItemIndex].tags;
+            const itemImage = itemToAdd.image? itemToAdd.image.src : "";
+            const item = { name: itemName, size: itemSize, link: itemLink, tags: itemTags, image: {src: itemImage} };
+
+            updatedItems[extSearchItemIndex] = item; // Update the specific row
+        } else {
+            updatedItems.push(itemToAdd); // Add as a new item if no specific row is targeted
+        }
+
+        setMealItems(updatedItems);
+        setShowPopup(false); // Close the popup
+        setHoveredItem(null); // Need to reset otherwise item image will stay on screen
+        setExtSearchItemIndex(null); // Reset item index
+        setExternalResults([]);
+        setSearchCompleteStatement("");
+        setSearch("");
+            
         /*setMeals((prevMeals) => {
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
@@ -488,6 +502,7 @@ const CreateMeals = () => {
         setExternalResults([]);
         setShowPopup(false);
         setSearchCompleteStatement("");
+        setSearch("");
     };
 
     const loadBasket = async (orderList) => {
@@ -920,7 +935,7 @@ const CreateMeals = () => {
 
                         {selectedMeal && (
                             <div className="meal-edit-section">
-                                {isMealPopupOpen && (
+                                {/*{isMealPopupOpen && (  DEPRECATED - NO LONGER USING POPUP
                                     <div className="meal-details">
                                         <button className="close-meal-details" onClick={() => setIsMealPopupOpen(false)}>◀ Hide</button>
                                         <h2 className='meal-details-meal-name'>{selectedMeal}</h2>
@@ -945,16 +960,16 @@ const CreateMeals = () => {
                                     <div className="meal-details-minimised">
                                         <button className="open-meal-details" onClick={() => setIsMealPopupOpen(true)}>▶</button>
                                     </div>
-                                )}
+                                )}*/}
 
                                 <hr className='page-break-line'></hr>
 
-                                <div className="select-item-category">
+                                <div className="select-item-category-meals">
                                     <div className="create-meal-title" data-tooltip="Add items to meal. Adding links will help speed up ordering. Adding tags and saving items to pre-saved items list will enable easier filtering and finding items again in future.">
-                                        <span className="info-sign">ⓘ</span> {selectedMeal}
+                                        <span className="info-sign">ⓘ</span>&nbsp;{selectedMeal}
                                     </div>
                                     {mealItems.map((item, index) => (
-                                        <div key={index} className="item-row">
+                                        <div key={index} className="item-row-meals">
                                             <input
                                                 type="text"
                                                 placeholder="Item name"
@@ -988,7 +1003,8 @@ const CreateMeals = () => {
                                                 title="Optional: add tags separated by spaces and/or commas"
                                             />
                                             <button className="remove-item-button" onClick={() => handleRemoveRow(index)} title="Remove this item">✖</button>
-                                            <button className="save-item-button-meals" onClick={() => handleSaveItem()} title="Add to pre-saved items">☰+</button>
+                                            <button className="search-item-button" onClick={() => handleSearchForRow(index)} title="Search store for products to link to this item">🔍</button>
+                                            <button className="save-item-button-meals" onClick={() => handleSaveItem(index)} title="Add to pre-saved items">☰+</button>
                                         </div>
                                     ))}
                                     <div className="add-row-container">
@@ -997,7 +1013,7 @@ const CreateMeals = () => {
                                         </button>
                                     </div>
                                     <div className="external-search-link" onClick={() => setShowPopup(true)}>
-                                        Search store for items
+                                        🔍 Search store for items
                                     </div>
                                 </div>
 
@@ -1100,7 +1116,7 @@ const CreateMeals = () => {
                     <div className="popup-content">
                         <span className="popup-close-button" onClick={() => popupClose()}>✖</span>
                         <h2 className="popup-title">Find More Items</h2>
-                        <div className="popup-description">Search for more items from grocery suppliers and add them to the app</div>
+                        <div className="popup-description">Search for products from grocery suppliers and link them to items in the app</div>
                         <input
                             type="text"
                             value={search}
@@ -1123,9 +1139,10 @@ const CreateMeals = () => {
 
                         {externalResults.length > 0 ? (
                             <>
+                                {/* DEPRECATED NOW NO LONGER USING DATABASE TO STORE ALL ITEMS
                                 <button className="popup-add-items-db-button" onClick={addNewItems}>
                                     Add Items to Database
-                                </button>
+                                </button>*/}
                                 <div className="items-list">
                                     {externalResults.map((item, index) => (
                                         <div key={index} className="item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>

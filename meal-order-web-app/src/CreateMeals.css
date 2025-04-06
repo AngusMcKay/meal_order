@@ -343,6 +343,7 @@
 }
 
 .meal-edit-section {
+    width: 100%;
     flex-direction: row;
     margin-top: 30px;
     z-index: 1;
@@ -434,6 +435,33 @@
     transition: transform 0.3s ease-in-out;
 }
 
+.select-item-category-meals {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers items horizontally */
+    justify-content: flex-start; /* Aligns items to the top */
+    width: 100%; /* Ensures the container spans the full width */
+    margin: 0 auto; /* Centers the container itself */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.item-row-meals {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%; /* Set a consistent width for the rows */
+    max-width: 600px; /* Optional: Limit the maximum width */
+    margin-bottom: 10px;
+}
+
+.add-row-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
 .add-row-button {
     display: flex;
     align-items: center;
@@ -443,7 +471,6 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    margin-top: 10px;
 }
 
 .add-row-icon {
@@ -461,6 +488,24 @@
     margin-left: 10px;
 }
 
+.remove-item-button:hover {
+    transform: scale(1.4);
+}
+
+.search-item-button {
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+.search-item-button:hover {
+    transform: scale(1.4);
+}
+
 .save-item-button-meals {
     margin-left: 5px;
     font-size: 20px;
@@ -468,6 +513,10 @@
     border: none;
     color: #DBA400;
     cursor: pointer;
+}
+
+.save-item-button-meals:hover {
+    transform: scale(1.4);
 }
 
 .create-meal-title {
@@ -478,29 +527,6 @@
     margin-bottom: 20px;
     color: #444;
     font-size: 30px;
-}
-
-.add-row-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 5px;
-}
-
-.add-row-button {
-    display: flex;
-    align-items: center;
-    background-color: #f0f0f0;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.add-row-icon {
-    margin-right: 5px;
-    font-size: 16px;
 }
 
 .search-items-create {
@@ -1085,12 +1111,9 @@
     }
 
     .meal-edit-section {
-        display: flex;
-        flex-direction: row;
         width: 100%;
-        align-items: flex-start;
-        justify-content: center;
-        position: relative;
+        flex-direction: row;
+        margin-top: 15px;
         z-index: 1;
     }
 
@@ -1179,6 +1202,99 @@
         overflow-y: auto;
         z-index: 2;
         transition: transform 0.3s ease-in-out;
+    }
+
+    .select-item-category-meals {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centers items horizontally */
+        justify-content: flex-start; /* Aligns items to the top */
+        width: 100%; /* Ensures the container spans the full width */
+        margin: 0 auto; /* Centers the container itself */
+        padding: 10px;
+        box-sizing: border-box;
+    }
+    
+    .item-row-meals {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 80%; /* Set a consistent width for the rows */
+        max-width: 300px; /* Optional: Limit the maximum width */
+        margin-bottom: 5px;
+    }
+    
+    .add-row-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .add-row-button {
+        display: flex;
+        align-items: center;
+        background-color: #f0f0f0;
+        border: none;
+        padding: 4px 6px;
+        border-radius: 2px;
+        cursor: pointer;
+        font-size: 7px;
+    }
+    
+    .add-row-icon {
+        margin-right: 2px;
+        font-size: 8px;
+    }
+    
+    .remove-item-button {
+        color: #C04000;
+        font-weight: bold;
+        font-size: 10px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-left: 5px;
+    }
+
+    .remove-item-button:hover {
+        transform: scale(1.4);
+    }
+
+    .search-item-button {
+        color: white;
+        border: none;
+        padding: 2px 4px;
+        border-radius: 2px;
+        cursor: pointer;
+        font-size: 7px;
+        margin-left: 2px;
+    }
+    
+    .search-item-button:hover {
+        transform: scale(1.4);
+    }
+    
+    .save-item-button-meals {
+        margin-left: 2px;
+        font-size: 10px;
+        background: none;
+        border: none;
+        color: #DBA400;
+        cursor: pointer;
+    }
+
+    .save-item-button-meals:hover {
+        transform: scale(1.4);
+    }
+
+    .create-meal-title {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 10px;
+        color: #444;
+        font-size: 15px;
     }
 
     .search-items-create {
