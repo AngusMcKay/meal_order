@@ -300,10 +300,10 @@ const CreateMeals = () => {
 
     const handleSaveItem = async (index) => {
 
-        const newItemName = mealItems[index].name;
-        const newItemQuantity = mealItems[index].size;
-        const newItemLink = mealItems[index].link;
-        const newItemTags = parseTags(mealItems[index].tags);
+        const newItemName = mealItems[index].name || "";
+        const newItemQuantity = mealItems[index].size || "";
+        const newItemLink = mealItems[index].link || "";
+        const newItemTags = mealItems[index].tags? parseTags(mealItems[index].tags) : [];
         const newItemImage = mealItems[index].image.src;
         const newItem = { name: newItemName, size: newItemQuantity, link: newItemLink, tags: newItemTags, image: {src: newItemImage} };
 
@@ -982,7 +982,7 @@ const CreateMeals = () => {
                                                 type="text"
                                                 placeholder="Size*"
                                                 className="create-item-quantity"
-                                                value={item.size}
+                                                value={item.size? item.size : ""}
                                                 onChange={(e) => handleRowChange(index, "size", e.target.value)}
                                                 title="Optional: size or quantity"
                                             />
@@ -990,7 +990,7 @@ const CreateMeals = () => {
                                                 type="text"
                                                 placeholder="Link*"
                                                 className="create-item-link"
-                                                value={item.link}
+                                                value={item.link? item.link : ""}
                                                 onChange={(e) => handleRowChange(index, "link", e.target.value)}
                                                 title="Optional: add a link to external site for future reference"
                                             />
@@ -998,7 +998,7 @@ const CreateMeals = () => {
                                                 type="text"
                                                 placeholder="Tags*"
                                                 className="create-item-tags"
-                                                value={item.tags}
+                                                value={item.tags? item.tags : ""}
                                                 onChange={(e) => handleRowChange(index, "tags", e.target.value)}
                                                 title="Optional: add tags separated by spaces and/or commas"
                                             />

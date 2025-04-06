@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     anonIds: [{ type: String, unique: true }], // Supports multiple anonymous IDs
     email: { type: String, unique: true, sparse: true }, // Use email for login
     meals: [{ name: String, items: [], recipe: String, tags: [] }],
-    items: [{ name: String, quantity: String, link: String, tags: [] }],
+    items: [{ name: String, size: String, link: String, tags: [] }],
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
