@@ -438,10 +438,10 @@ const CreateMeals = () => {
         // Check if a specific row index is stored in popupPosition and then don't replace existing names and sizes
         if (extSearchItemIndex !== null) {
             const itemName = mealItems[extSearchItemIndex].name || itemToAdd.name;
-            const itemSize = mealItems[extSearchItemIndex].size || itemToAdd.size? itemToAdd.size.value : "";
+            const itemSize = mealItems[extSearchItemIndex].size || itemToAdd.size?.value || "";
             const itemLink = itemToAdd.retailerProductId? `https://groceries.morrisons.com/products/${itemToAdd.retailerProductId}`: "";
             const itemTags = mealItems[extSearchItemIndex].tags;
-            const itemImage = itemToAdd.image? itemToAdd.image.src : "";
+            const itemImage = itemToAdd.image?.src || "";
             const item = { name: itemName, size: itemSize, link: itemLink, tags: itemTags, image: {src: itemImage} };
 
             updatedItems[extSearchItemIndex] = item; // Update the specific row
