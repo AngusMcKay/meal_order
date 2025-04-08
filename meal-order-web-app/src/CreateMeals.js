@@ -19,7 +19,7 @@ socket.on("connect", () => {
 
 const CreateMeals = () => {
     const { user, saveMeal, saveItem, deleteMeal } = useUser();
-    const [meals, setMeals] = useState([]);
+    const [meals, setMeals] = useState(user?.meals || []);
     const [editedMeals, setEditedMeals] = useState([]);
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
@@ -91,10 +91,14 @@ const CreateMeals = () => {
     }, [cartVisible]);    
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
+        setMeals(user?.meals || []);
+    }, [user]);
+
+    useEffect(() => {
+        /*fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
             .then(data => setMeals(data))
-            .catch(error => console.error("Error fetching meals:", error));
+            .catch(error => console.error("Error fetching meals:", error));*/
 
         fetch(`${API_BASE_URL}/items`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
@@ -887,7 +891,7 @@ const CreateMeals = () => {
                             <button className="go-back-button" onClick={handleGoBack}>Back</button>
                             <select className="change-meal-dropdown" value="" onChange={(e) => handleSelectMeal(meals.find(meal => meal.name === e.target.value))}>
                                 <option value="" disabled>Change meal</option>
-                                {meals.map(meal => (
+                                {meals && meals.length > 0 && meals.map(meal => (
                                     <option key={meal.name} value={meal.name}>{meal.name}</option>
                                 ))}
                             </select>
@@ -968,7 +972,7 @@ const CreateMeals = () => {
                                     <div className="create-meal-title" data-tooltip="Add items to meal. Adding links will help speed up ordering. Adding tags and saving items to pre-saved items list will enable easier filtering and finding items again in future.">
                                         <span className="info-sign">ⓘ</span>&nbsp;{selectedMeal}
                                     </div>
-                                    {mealItems.map((item, index) => (
+                                    {mealItems && mealItems.length > 0 && mealItems.map((item, index) => (
                                         <div key={index} className="item-row-meals">
                                             <input
                                                 type="text"
@@ -989,22 +993,22 @@ const CreateMeals = () => {
                                             <input
                                                 type="text"
                                                 placeholder="Link*"
-                                                className="create-item-link"
+                                                className="create-item-link-meals"
                                                 value={item.link? item.link : ""}
                                                 onChange={(e) => handleRowChange(index, "link", e.target.value)}
-                                                title="Optional: add a link to external site for future reference"
+                                                title="Optional: add a link to external site to make ordering easier"
                                             />
-                                            <input
+                                            {/*<input
                                                 type="text"
                                                 placeholder="Tags*"
                                                 className="create-item-tags"
                                                 value={item.tags? item.tags : ""}
                                                 onChange={(e) => handleRowChange(index, "tags", e.target.value)}
                                                 title="Optional: add tags separated by spaces and/or commas"
-                                            />
+                                            />*/}
                                             <button className="remove-item-button" onClick={() => handleRemoveRow(index)} title="Remove this item">✖</button>
                                             <button className="search-item-button" onClick={() => handleSearchForRow(index)} title="Search store for products to link to this item">🔍</button>
-                                            <button className="save-item-button-meals" onClick={() => handleSaveItem(index)} title="Add to pre-saved items">☰+</button>
+                                            {/*<button className="save-item-button-meals" onClick={() => handleSaveItem(index)} title="Add to pre-saved items">☰+</button>*/}
                                         </div>
                                     ))}
                                     <div className="add-row-container">

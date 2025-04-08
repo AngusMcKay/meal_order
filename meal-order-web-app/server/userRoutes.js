@@ -15,12 +15,14 @@ const User = mongoose.model("User", userSchema);
 
 // 📌 Middleware to find or create user
 async function findOrCreateUser(req, res, next) {
+    console.log("Trying to find or create user...");
     try {
-        const { anonUserId, email } = req.body;
+        const { anonUserId, email } = req.query;
 
         let user = null;
 
         if (email) {
+            console.log("Trying to find user by email");
             // Find the user by email
             user = await User.findOne({ email });
 
@@ -34,6 +36,7 @@ async function findOrCreateUser(req, res, next) {
                 }
             }
         } else if (anonUserId) {
+            console.log("Trying to find user by anonUserId");
             // Find by anonUserId if email is not provided
             user = await User.findOne({ anonIds: anonUserId });
         }
@@ -57,7 +60,8 @@ async function findOrCreateUser(req, res, next) {
 
 // 📌 GET /get-user → Retrieve user data
 router.get("/get-user", findOrCreateUser, async (req, res) => {
-    res.json(req.user);
+    //console.log(`Sending user: ${req.user}`);  // for debugging
+    res.json({ user: req.user} );
 });
 
 // 📌 POST /save-meals → Save user meals

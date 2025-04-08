@@ -16,9 +16,12 @@ export const UserContextProvider = ({ children }) => {
     const anonUserId = getOrCreateAnonymousId();
 
     useEffect(() => {
-        fetch(`http://localhost:5000/user/get-user/${anonUserId}`)
+        fetch(`http://localhost:5000/user/get-user?anonUserId=${anonUserId}`)
             .then(res => res.json())
-            .then(data => setUser(data.user))
+            .then(data => {
+                //console.log("User fetched:", data.user); // for debugging
+                setUser(data.user);
+            })
             .catch(err => console.error("Error fetching user:", err));
     }, [anonUserId]);
 
