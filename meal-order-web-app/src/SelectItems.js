@@ -19,7 +19,8 @@ socket.on("connect", () => {
 
 const SelectItems = () => {
     const { user, saveMeal, saveItem, deleteMeal } = useUser();
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState(user?.items || []);
+    //const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
     const [searchExternal, setSearchExternal] = useState("");
     const [customHeading, setCustomHeading] = useState("Individual Items");
@@ -55,6 +56,10 @@ const SelectItems = () => {
     const [extCookiePopupLink, setExtCookiePopupLink] = useState("");
     const [extCookiePopupLinkText, setExtCookiePopupLinkText] = useState("Click here to open");
 
+    // tag filtering
+    const [selectedTags, setSelectedTags] = useState([]); // Stores selected tags
+    const [allTags, setAllTags] = useState([]); // Stores all distinct tags
+
     const [orderProgress, setOrderProgress] = useState("");
     useEffect(() => {
         socket.on("orderProgress", (message) => {
@@ -81,6 +86,17 @@ const SelectItems = () => {
 
     // Fetch items from backend
     useEffect(() => {
+        // Extract distinct tags from items
+        const tags = new Set();
+        user?.items?.forEach(item => {
+            item.tags?.forEach(tag => tags.add(tag));
+        });
+        setAllTags([...tags]); // Convert Set to Array
+        setItems(user?.items || []);
+        setLoading(false);
+    }, [user]);
+    /* DEPRECATED - now using user specific items
+    useEffect(() => {
         fetch(`${API_BASE_URL}/items`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
             .then(data => {
@@ -91,7 +107,7 @@ const SelectItems = () => {
                 console.error("Error fetching items:", error);
                 setLoading(false);
             });
-    }, []);
+    }, []);*/
 
     const parseTags = (input) => {
         return input
@@ -448,6 +464,23 @@ const SelectItems = () => {
         });
     };
 
+    // Tag filtering
+    const handleTagSelect = (tag) => {
+        if (!selectedTags.includes(tag)) {
+            setSelectedTags([...selectedTags, tag]); // Add tag to selectedTags
+        }
+    };
+
+    const handleTagRemove = (tag) => {
+        setSelectedTags(selectedTags.filter(t => t !== tag)); // Remove tag from selectedTags
+    };
+
+    const filteredItems = items.filter(item => {
+        // Filter items based on selected tags
+        if (selectedTags.length === 0) return true; // Show all items if no tags are selected
+        return selectedTags.every(tag => item.tags?.includes(tag));
+    });
+
     return (
         <div className="items-container">
             <div className="top-section">
@@ -516,7 +549,7 @@ const SelectItems = () => {
                     <button className="save-item-button" onClick={() => handleAddNewItemToOrder()}>Add to Shopping List</button>
                     <button className="save-item-button" onClick={() => handleSaveItem()}>Save Item</button>
                     <div className="external-search-link" onClick={() => setShowPopup(true)}>
-                        Search store for items
+                        🔍 Search store for items
                     </div>
                 </div>
 
@@ -531,24 +564,51 @@ const SelectItems = () => {
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)}
                     />
+                    <select
+                        className="tag-dropdown"
+                        onChange={(e) => handleTagSelect(e.target.value)}
+                        value="" // Reset dropdown after selection
+                    >
+                        <option value="" disabled>Filter by tags</option>
+                        {allTags.map(tag => (
+                            <option key={tag} value={tag} disabled={selectedTags.includes(tag)}>
+                                {tag}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="selected-tags">
+                    {selectedTags.map(tag => (
+                        <span key={tag} className="tag">
+                            {tag}
+                            <button className="remove-tag-button" onClick={() => handleTagRemove(tag)}>✖</button>
+                        </span>
+                    ))}
                 </div>
 
                 {loading ? (
                     <div className="loading-message">Finding items...<div className="loading-spinner"></div></div>
+                ) : filteredItems.length === 0 ? (
+                    <div className="no-items-message">No items match the selected tags and search term.</div>
                 ) : (
                     <div className="items-list">
-                        {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
+                        {filteredItems.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
                             <div key={item._id} className="item formatted-item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                 <span className="item-text-select-items">
-                                    {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
-                                    <sup>
-                                        <a 
-                                            href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="item-link"
-                                        >view ⎘</a>
-                                    </sup>
+                                    {item.name}{item.size ? ` (${item.size})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
+                                    { item.link? (
+                                        <sup>
+                                            <a 
+                                                href={`${item.link}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="item-link"
+                                            >view ⎘</a>
+                                        </sup>
+                                    ) : (
+                                        <></>
+                                    )}
                                 </span>
                                 <button className="add-item-button" onClick={() => handleAddToOrder(item)}>Add</button>
                             </div>

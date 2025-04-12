@@ -17,7 +17,9 @@ const User = mongoose.model("User", userSchema);
 async function findOrCreateUser(req, res, next) {
     console.log("Trying to find or create user...");
     try {
-        const { anonUserId, email } = req.query;
+        // Extract anonUserId and email from query (get requests) or body (post requests)
+        const anonUserId = req.query.anonUserId || req.body.anonUserId;
+        const email = req.query.email || req.body.email;
 
         let user = null;
 
@@ -125,13 +127,27 @@ router.post("/save-item", findOrCreateUser, async (req, res) => {
 // 📌 DELETE /delete-meal → Remove a meal by name
 router.delete("/delete-meal", findOrCreateUser, async (req, res) => {
     try {
-        const mealName = req.body.mealName;
+        const { mealName } = req.body.mealName;
         req.user.meals = req.user.meals.filter(meal => meal.name !== mealName);
-        await req.user.save();
-        res.json({ success: true, meals: req.user.meals });
+        await req.user.save(); // Save changes to DB
+        console.log("user after deleting meal:", req.user);
+        res.json(req.user);
     } catch (error) {
         console.error("Error deleting meal:", error);
         res.status(500).json({ error: "Failed to delete meal" });
+    }
+});
+
+// 📌 DELETE /delete-item → Remove a meal by name
+router.delete("/delete-item", findOrCreateUser, async (req, res) => {
+    try {
+        const { itemName } = req.body.itemName;
+        req.user.items = req.user.items.filter(item => item.name !== itemName);
+        await req.user.save(); // Save changes to DB
+        res.json(req.user);
+    } catch (error) {
+        console.error("Error deleting item:", error);
+        res.status(500).json({ error: "Failed to delete item" });
     }
 });
 

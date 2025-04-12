@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Tabs from "./Tabs";
 import "./CreateMeals.css";
 import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -20,8 +21,10 @@ socket.on("connect", () => {
 const CreateMeals = () => {
     const { user, saveMeal, saveItem, deleteMeal } = useUser();
     const [meals, setMeals] = useState(user?.meals || []);
+    //const [meals, setMeals] = useState([]);
     const [editedMeals, setEditedMeals] = useState([]);
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState(user?.items || []);
+    //const [items, setItems] = useState([]);    
     const [search, setSearch] = useState("");
     const [newMealName, setNewMealName] = useState("");
     const [selectedMeal, setSelectedMeal] = useState(null);
@@ -95,10 +98,16 @@ const CreateMeals = () => {
     }, [user]);
 
     useEffect(() => {
-        /*fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
+        setItems(user?.items || []);
+        setLoading(false);
+    }, [user]);
+
+    // DEPRECATED - now getting user specific meals and items
+    /*useEffect(() => {
+        fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
             .then(data => setMeals(data))
-            .catch(error => console.error("Error fetching meals:", error));*/
+            .catch(error => console.error("Error fetching meals:", error));
 
         fetch(`${API_BASE_URL}/items`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then(response => response.json())
@@ -110,7 +119,7 @@ const CreateMeals = () => {
                 console.error("Error fetching items:", error)
                 setLoading(false);
             });
-    }, []);
+    }, []);*/
 
     const handleCreateMeal = () => {
         if (newMealName === "") {
@@ -123,9 +132,9 @@ const CreateMeals = () => {
             return;
         }
         setError("");
-        setMeals([...meals, { name: newMealName, items: [] }]);
+        setMeals([...meals, { name: newMealName, items: [{ name: "", size: "", link: "", tags: "" }] }]);
         setSelectedMeal(newMealName);
-        setMealItems([]);
+        setMealItems([{ name: "", size: "", link: "", tags: "" }]);
         setEditingMode(true);
         //setIsMealPopupOpen(true); // DEPRECATED - now showing meals on main page
         setNewMealName("");
@@ -262,7 +271,7 @@ const CreateMeals = () => {
 
     const handleDeleteMeal = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/meals/${encodeURIComponent(selectedMeal)}`, {
+            /*const response = await fetch(`${API_BASE_URL}/meals/${encodeURIComponent(selectedMeal)}`, {
                 method: "DELETE",
                 "ngrok-skip-browser-warning": "true"
             });
@@ -277,7 +286,15 @@ const CreateMeals = () => {
             }
 
             // Remove meal from state
-            setMeals(meals.filter(m => m.name !== selectedMeal));
+            setMeals(meals.filter(m => m.name !== selectedMeal));*/
+
+            const data = await deleteMeal({ mealName: selectedMeal });
+
+            if (data.success) {
+                toast.success("Meal deleted!", { position: "top-center" });
+            } else {
+                toast.error("Error deleting meal.", { position: "top-center" });
+            }
 
             // Reset to initial view
             setShowDeletePopup(false);
@@ -450,7 +467,13 @@ const CreateMeals = () => {
 
             updatedItems[extSearchItemIndex] = item; // Update the specific row
         } else {
-            updatedItems.push(itemToAdd); // Add as a new item if no specific row is targeted
+            const itemName = itemToAdd.name;
+            const itemSize = itemToAdd.size?.value || "";
+            const itemLink = itemToAdd.retailerProductId? `https://groceries.morrisons.com/products/${itemToAdd.retailerProductId}`: "";
+            const itemTags = [];
+            const itemImage = itemToAdd.image?.src || "";
+            const item = { name: itemName, size: itemSize, link: itemLink, tags: itemTags, image: {src: itemImage} };
+            updatedItems.push(item); // Add as a new item if no specific row is targeted
         }
 
         setMealItems(updatedItems);
@@ -833,6 +856,8 @@ const CreateMeals = () => {
 
     return (
         <div className="create-meals-container">
+            <Tabs />
+            <h1>Create Meals</h1>
             <ToastContainer />
             <div className="top-section-create">
                 <div className="header">
@@ -1046,15 +1071,19 @@ const CreateMeals = () => {
                                             {items.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (
                                                 <div key={item._id} className="item-create" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                                                     <span className="item-text-create">
-                                                        {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
-                                                        <sup>
+                                                        {item.name}{item.size ? ` (${item.size})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
+                                                        {item.link? (<sup>
                                                             <a 
-                                                                href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                                                href={`${item.link}`} 
                                                                 target="_blank" 
                                                                 rel="noopener noreferrer"
                                                                 className="item-link"
                                                             >view ⎘</a>
                                                         </sup>
+                                                        ) : (
+                                                            <></>
+                                                        )
+                                                        }
                                                     </span>
                                                     <button className="add-item-button" onClick={() => handleAddItemToMeal(item)}>Add</button>
                                                 </div>

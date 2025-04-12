@@ -50,6 +50,7 @@ export const UserContextProvider = ({ children }) => {
 
     const saveItem = async (item) => {
         try {
+            console.log(`Saving item to user: ${anonUserId}`)
 	        const response = await fetch(`http://localhost:5000/user/save-item`, {
 	            method: "POST",
 	            headers: { "Content-Type": "application/json" },
@@ -71,15 +72,50 @@ export const UserContextProvider = ({ children }) => {
 	    }
     };
 
-    const deleteMeal = async (mealId) => {
-        await fetch(`http://localhost:5000/user/delete-meal`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ anonUserId, mealId }),
-        });
-        setUser(prev => ({ ...prev, meals: prev.meals.filter(meal => meal.id !== mealId) }));
+    const deleteMeal = async (mealName) => {
+        try {
+            const response = await fetch(`http://localhost:5000/user/delete-meal`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mealName, anonUserId }),
+            });
+            
+            if (!response.ok) {
+                throw new Error("Failed to delete meal");
+            }
+            
+            const updatedUser = await response.json(); // Get updated user from backend
+            
+            setUser(updatedUser);
 
-        return { success: true, message: "Meal deleted!" };
+            return { success: true, message: "Meal deleted!" };
+        
+        } catch (error) {
+            console.error("Error deleting meal:", error);
+        }
+    };
+
+    const deleteItem = async (itemName) => {
+        try {
+            const response = await fetch(`http://localhost:5000/user/delete-item`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ itemName, anonUserId }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete item");
+            }
+            
+            const updatedUser = await response.json(); // Get updated user from backend
+            
+            setUser(updatedUser);
+
+            return { success: true, message: "Item deleted!" };
+        
+        } catch (error) {
+            console.error("Error deleting item:", error);
+        }
     };
 
     return (

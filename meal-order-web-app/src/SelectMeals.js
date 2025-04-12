@@ -17,7 +17,8 @@ socket.on("connect", () => {
 
 const SelectMeals = () => {
     const { user, saveMeal, saveItem, deleteMeal } = useUser();
-    const [mealsData, setMealsData] = useState([]);
+    const [mealsData, setMealsData] = useState(user?.meals || []);
+    //const [mealsData, setMealsData] = useState([]);
     const [selectedMeal, setSelectedMeal] = useState("");
     const [selectedItems, setSelectedItems] = useState({});
     const [recipe, setRecipe] = useState("");
@@ -70,6 +71,11 @@ const SelectMeals = () => {
     
     // Fetch meals from backend
     useEffect(() => {
+            setMealsData(user?.meals || []);
+        }, [user]);
+
+    /* DEPRECATED - now using user specific meals
+    useEffect(() => {
         fetch(`${API_BASE_URL}/meals`, { method: 'GET', headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" } })
             .then((response) => response.json())
             .then((data) => {
@@ -77,7 +83,7 @@ const SelectMeals = () => {
                 setMealsData(data);
             })
             .catch((err) => console.error("Error fetching meals:", err));
-    }, []);
+    }, []);*/
 
     const handleMealChange = (event) => {
         const mealName = event.target.value;
@@ -322,11 +328,11 @@ const SelectMeals = () => {
                     {mealsData.find(m => m.name === selectedMeal)?.items.map((item, index) => (
                         <div key={index} className="item" onMouseEnter={(event) => handleMouseEnter(event, item)} onMouseLeave={() => setHoveredItem(null)}>
                             <span className="item-text">
-                                {item.name}{item.size ? ` (${item.size.value})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
-                                { !checkPlaceholderItem(item) ? (
+                                {item.name}{item.size ? ` (${item.size})` : ""}{item.price ? `, £${item.price.current.amount}` : ""}
+                                { item.link ? (
                                     <sup>
                                         <a 
-                                            href={`https://groceries.morrisons.com/products/${item.retailerProductId}`} 
+                                            href={`${item.link}`} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="item-link"
