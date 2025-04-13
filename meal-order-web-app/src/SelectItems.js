@@ -49,6 +49,7 @@ const SelectItems = () => {
     const [failedItems, setFailedItems] = useState([]);
     const [hoveredItem, setHoveredItem] = useState(null);
     const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+    const [saveItemPopup, setSaveItemPopup] = useState(false);
 
     // cookies stuff
     const [extensionExists, setExtensionExists] = useState(null);
@@ -124,8 +125,22 @@ const SelectItems = () => {
             alert("Please enter item name");
             return;
         }
-        try {
 
+        // Check if an item with the same name already exists
+        const existingItem = items.find(item => item.name.toLowerCase() === newItemName.toLowerCase());
+
+        if (existingItem) {
+            // Show confirmation popup
+            setSaveItemPopup(true);
+            return; // move to handling via the popup
+        }
+        
+        doTheActualSaving();
+    };
+
+    const doTheActualSaving = async () => {
+        try {
+            setSaveItemPopup(false)
             const data = await saveItem({ name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags), image: {src: newItemImage} });
 
             if (data.success) {
@@ -137,7 +152,7 @@ const SelectItems = () => {
             console.error("Error saving item:", error);
             toast.error("Server error", { position: "top-center" });
         }
-    };
+    }
 
     const handleAddNewItemToOrder = () => {
         const newItem = { name: newItemName, size: newItemQuantity, link: newItemLink, tags: parseTags(newItemTags) };
@@ -150,6 +165,7 @@ const SelectItems = () => {
             }
             return [...prevOrders, { meal: customHeading, items: [newItem] }];
         });
+        toast.success("Item added!", { position: "top-center" });
     };
 
     const handleAddToOrder = (item) => {
@@ -162,6 +178,7 @@ const SelectItems = () => {
             }
             return [...prevOrders, { meal: customHeading, items: [item] }];
         });
+        toast.success("Item added!", { position: "top-center" });
     };
 
     const handleEditItem = (item) => {
@@ -509,6 +526,7 @@ const SelectItems = () => {
     return (
         <div className="items-container">
             <Tabs />
+            <ToastContainer />
             <div className="top-section">
                 <div className="header">
                     {/*<button className="home-button" onClick={() => window.location.href = "/"}>Home</button>*/}
@@ -644,6 +662,18 @@ const SelectItems = () => {
                     </div>
                 )}
             </div>
+            {saveItemPopup && (
+                <div className="save-popup-overlay">
+                    <div className="save-popup">
+                        <h3>{`Overwrite existing item "${newItemName}"?`}</h3>
+                        <div className="save-popup-buttons">
+                            <button className="confirm-save" onClick={doTheActualSaving}>Yes, overwrite</button>
+                            <button className="cancel-save" onClick={() => setSaveItemPopup(false)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {hoveredItem && hoveredItem.image?.src && (
                 <div 
                     className="hover-popup-select" 

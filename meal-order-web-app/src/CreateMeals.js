@@ -267,6 +267,7 @@ const CreateMeals = () => {
         const itemsToAdd = mealItems.filter((item) => !checkPlaceholderItem(item));
         setOrderList([...orderList, { meal: selectedMeal, items: itemsToAdd }]);
         localStorage.setItem("orderList", JSON.stringify([...orderList, { meal: selectedMeal, items: mealItems }]));
+        toast.success("Meal added!", { position: "top-center" });
     };
 
     const handleDeleteMeal = async () => {
@@ -319,6 +320,7 @@ const CreateMeals = () => {
             .map(tag => tag.toLowerCase()); // Convert to lowercase
     };
 
+    // DEPRECATED - no longer allowing item creation on meals page as it was confusing
     const handleSaveItem = async (index) => {
 
         const newItemName = mealItems[index].name || "";
@@ -994,7 +996,7 @@ const CreateMeals = () => {
 
                                 <div className="select-item-category-meals">
                                     <div className="create-meal-title" data-tooltip="Add items to meal. Adding links will help speed up ordering. Adding tags and saving items to pre-saved items list will enable easier filtering and finding items again in future.">
-                                        <span className="info-sign">ⓘ</span>&nbsp;{selectedMeal}
+                                        <span className="info-sign"></span>&nbsp;{selectedMeal}
                                     </div>
                                     {mealItems && mealItems.length > 0 && mealItems.map((item, index) => (
                                         <div key={index} className="item-row-meals">

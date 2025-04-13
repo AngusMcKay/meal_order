@@ -212,6 +212,51 @@
     box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
 }
 
+.save-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    color: #444;
+}
+
+.save-popup {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.save-popup-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.confirm-save {
+    background: #C04000;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.cancel-save {
+    background: gray;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
 .create-item-note {
     width: 40%;
     padding: 10px;
