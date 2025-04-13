@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Tabs from "./Tabs";
 import "./SelectMeals.css";
 import "./Generic.css";
 import { loadBasketMorrisons } from './Selenium.js'
@@ -293,9 +294,10 @@ const SelectMeals = () => {
 
     return (
         <div className="meal-container">
+            <Tabs />
             <div className="top-section-meals"> 
                 <div className="header">
-                    <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
+                    {/*<button className="home-button" onClick={() => window.location.href = "/"}>Home</button>*/}
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Tabs from "./Tabs";
+import Tabs from "./Tabs.js";
 import "./CreateMeals.css";
 import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -857,11 +857,10 @@ const CreateMeals = () => {
     return (
         <div className="create-meals-container">
             <Tabs />
-            <h1>Create Meals</h1>
             <ToastContainer />
             <div className="top-section-create">
                 <div className="header">
-                    <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
+                    {/*<button className="home-button" onClick={() => window.location.href = "/"}>Home</button>*/}
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
                 <h1 className="create-title">Create Meals and Lists</h1>

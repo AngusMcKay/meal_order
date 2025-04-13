@@ -119,7 +119,7 @@ export const UserContextProvider = ({ children }) => {
     };
 
     return (
-        <UserContext.Provider value={{ user, saveMeal, saveItem, deleteMeal }}>
+        <UserContext.Provider value={{ user, saveMeal, saveItem, deleteMeal, deleteItem }}>
             {children}
         </UserContext.Provider>
     );

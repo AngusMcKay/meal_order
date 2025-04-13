@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Tabs from "./Tabs";
 import { useNavigate } from "react-router-dom";
 import { Tooltip } from "@mui/material";
 import "./HomePage.css";
@@ -228,78 +229,89 @@ const HomePage = () => {
     };
 
     return (
-        <div className="container">
-            <div className="header">
-                <button className="cart-button-home" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
+        <div className='home-page'>
+            <Tabs />
+            <div className="top-section-home">
+                <div className="header">
+                    <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
+                </div>
             </div>
-            <h1 className="title">Welcome to Grocery List & Delivery</h1>
-            <p className="description">
-                Streamline your grocery shopping by selecting meals and automatically populating shopping carts.
-                Choose one of the options below to get started.
-            </p>
-            
-            <div className="button-container row">
-                <Tooltip title="Select from presaved meal combinations and item lists to add to Shopping Basket" arrow>
-                    <button className="button meals" onClick={() => navigate("/select-meals")}>My Meals and Lists</button>
-                </Tooltip>
+            <div className="container">
                 
-                <Tooltip title="Add individual items for your order" arrow>
-                    <button className="button items" onClick={() => navigate("/select-items")}>Individual Items</button>
-                </Tooltip>
+                <h1 className="title">Welcome to Grocery List & Delivery</h1>
+                <p className="description">
+                    Streamline your grocery shopping by selecting meals and automatically populating shopping carts.
+                    Choose the appropriate tab above for what you want to do:
+                    <ul className="home-guidance">
+                        <li><span className="bold">My Meals:</span> select presaved meals to add items to Shopping List</li>
+                        <li><span className="bold">Items:</span> add individual items to your order</li>
+                        <li><span className="bold">Create Meals:</span> create meals to add to order or save for future use</li>
+                    </ul>
+                </p>
                 
-                <Tooltip title="Create meals and lists to save for future use" arrow>
-                    <button className="button create" onClick={() => navigate("/create-meals")}>Create Meals and Lists</button>
-                </Tooltip>
-            </div>
+                {/*<div className="button-container row">
+                    <Tooltip title="Select from presaved meal combinations and item lists to add to Shopping Basket" arrow>
+                        <button className="button meals" onClick={() => navigate("/select-meals")}>My Meals and Lists</button>
+                    </Tooltip>
+                    
+                    <Tooltip title="Add individual items for your order" arrow>
+                        <button className="button items" onClick={() => navigate("/select-items")}>Individual Items</button>
+                    </Tooltip>
+                    
+                    <Tooltip title="Create meals and lists to save for future use" arrow>
+                        <button className="button create" onClick={() => navigate("/create-meals")}>Create Meals and Lists</button>
+                    </Tooltip>
+                </div>*/}
 
-            {cartVisible && (
-                <CartSidebar 
-                    cartVisible={cartVisible}
-                    setCartVisible={setCartVisible}
-                    orderList={orderList}
-                    removeCartItem={removeCartItem}
-                    removeCartMeal={removeCartMeal}
-                    loadBasket={loadBasket}
-                    clearCartCheck={clearCartCheck}
-                />
-            )}
+                {cartVisible && (
+                    <CartSidebar 
+                        cartVisible={cartVisible}
+                        setCartVisible={setCartVisible}
+                        orderList={orderList}
+                        removeCartItem={removeCartItem}
+                        removeCartMeal={removeCartMeal}
+                        loadBasket={loadBasket}
+                        clearCartCheck={clearCartCheck}
+                    />
+                )}
 
-            { loadingBasketPopup && (
-                <LoadingBasketPopup
-                    loadingBasketPopup={loadingBasketPopup}
-                    loadingBasket={loadingBasket}
-                    setLoadingBasket={setLoadingBasket}
-                    basketPopupClose={basketPopupClose}
-                    failedItems={failedItems}
-                    orderProgress={orderProgress}
-                />
-            )}
+                { loadingBasketPopup && (
+                    <LoadingBasketPopup
+                        loadingBasketPopup={loadingBasketPopup}
+                        loadingBasket={loadingBasket}
+                        setLoadingBasket={setLoadingBasket}
+                        basketPopupClose={basketPopupClose}
+                        failedItems={failedItems}
+                        orderProgress={orderProgress}
+                    />
+                )}
 
-            {clearCartPopup && (
-                <div className="clear-cart-popup-overlay">
-                    <div className="clear-cart-popup">
-                        <h3>Are you sure you want to remove all items from the Shopping List?</h3>
-                        <p>This action cannot be undone</p>
-                        <div className="clear-cart-popup-buttons">
-                            <button className="clear-cart-confirm-delete" onClick={clearCart}>Yes, Delete</button>
-                            <button className="clear-cart-cancel-delete" onClick={() => setClearCartPopup(false)}>Cancel</button>
+                {clearCartPopup && (
+                    <div className="clear-cart-popup-overlay">
+                        <div className="clear-cart-popup">
+                            <h3>Are you sure you want to remove all items from the Shopping List?</h3>
+                            <p>This action cannot be undone</p>
+                            <div className="clear-cart-popup-buttons">
+                                <button className="clear-cart-confirm-delete" onClick={clearCart}>Yes, Delete</button>
+                                <button className="clear-cart-cancel-delete" onClick={() => setClearCartPopup(false)}>Cancel</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {showExtCookiePopup && (
-                <ExtCookiePopup
-                    extCookiePopupMessage={extCookiePopupMessage}
-                    extCookiePopupLink={extCookiePopupLink}
-                    setShowExtCookiePopup={setShowExtCookiePopup}
-                    extensionExists={extensionExists}
-                    checkForExtension={checkForExtension}
-                    extractCookies={extractCookies}
-                    extCookiePopupLinkText={extCookiePopupLinkText}
-                />
-            )}
+                {showExtCookiePopup && (
+                    <ExtCookiePopup
+                        extCookiePopupMessage={extCookiePopupMessage}
+                        extCookiePopupLink={extCookiePopupLink}
+                        setShowExtCookiePopup={setShowExtCookiePopup}
+                        extensionExists={extensionExists}
+                        checkForExtension={checkForExtension}
+                        extractCookies={extractCookies}
+                        extCookiePopupLinkText={extCookiePopupLinkText}
+                    />
+                )}
 
+            </div>
         </div>
     );
 };

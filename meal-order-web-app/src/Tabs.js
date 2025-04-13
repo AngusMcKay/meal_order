@@ -7,10 +7,10 @@ const Tabs = () => {
     const location = useLocation();
 
     const tabs = [
-        { name: "Home", path: "/", color: "#ff909e" },
-        { name: "My Meals", path: "/select-meals", color: "#58855C" },
-        { name: "Items", path: "/select-items", color: "#4a5568" },
-        { name: "Create Meals", path: "/create-meals", color: "#245682" },
+        { name: "Home", path: "/", color: "#f3f4f6" },
+        { name: "My Meals", path: "/select-meals", color: "#6bcad1" },
+        { name: "Items", path: "/select-items", color: "#ffde8f" },
+        { name: "Create Meals", path: "/create-meals", color: "#ff909e" },
     ];
 
     return (
@@ -22,7 +22,7 @@ const Tabs = () => {
                     style={{ backgroundColor: tab.color }}
                     onClick={() => navigate(tab.path)}
                 >
-                    {location.pathname !== tab.path && tab.name}
+                    {tab.name}
                 </div>
             ))}
         </div>

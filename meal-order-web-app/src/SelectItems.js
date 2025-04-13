@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Tabs from "./Tabs";
 import "./SelectItems.css";
 import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -18,7 +19,7 @@ socket.on("connect", () => {
 });
 
 const SelectItems = () => {
-    const { user, saveMeal, saveItem, deleteMeal } = useUser();
+    const { user, saveMeal, saveItem, deleteMeal, deleteItem } = useUser();
     const [items, setItems] = useState(user?.items || []);
     //const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
@@ -133,7 +134,7 @@ const SelectItems = () => {
                 toast.error("Error saving item", { position: "top-center" });
             }
         } catch (error) {
-            console.error("Error saving meal:", error);
+            console.error("Error saving item:", error);
             toast.error("Server error", { position: "top-center" });
         }
     };
@@ -161,6 +162,30 @@ const SelectItems = () => {
             }
             return [...prevOrders, { meal: customHeading, items: [item] }];
         });
+    };
+
+    const handleEditItem = (item) => {
+        setNewItemName(item.name);
+        setNewItemQuantity(item.size || "");
+        setNewItemLink(item.link || "");
+        setNewItemTags(item.tags ? item.tags.join(", ") : "");
+        setNewItemImage(item.image?.src || ""); // even though not displayed, needs included so that remains when item is saved again
+    };
+
+    const handleDeleteItem = async (item) => {
+        try {
+
+            const data = await deleteItem({ itemName: item.name });
+
+            if (data.success) {
+                toast.success("Item deleted!", { position: "top-center" });
+            } else {
+                toast.error("Error deleting item", { position: "top-center" });
+            }
+        } catch (error) {
+            console.error("Error deleting item:", error);
+            toast.error("Server error", { position: "top-center" });
+        }
     };
 
     const removeCartItem = (mealIndex, itemIndex) => {
@@ -483,9 +508,10 @@ const SelectItems = () => {
 
     return (
         <div className="items-container">
+            <Tabs />
             <div className="top-section">
                 <div className="header">
-                    <button className="home-button" onClick={() => window.location.href = "/"}>Home</button>
+                    {/*<button className="home-button" onClick={() => window.location.href = "/"}>Home</button>*/}
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
                 <h1 className="items-title">Select Individual Items</h1>
@@ -611,6 +637,8 @@ const SelectItems = () => {
                                     )}
                                 </span>
                                 <button className="add-item-button" onClick={() => handleAddToOrder(item)}>Add</button>
+                                <button className="edit-item-button" onClick={() => handleEditItem(item)}>Edit</button>
+                                <button className="delete-item-button" onClick={() => handleDeleteItem(item)}>Delete</button>
                             </div>
                         ))}
                     </div>
