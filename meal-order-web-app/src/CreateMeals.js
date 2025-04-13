@@ -21,10 +21,11 @@ socket.on("connect", () => {
 const CreateMeals = () => {
     const { user, saveMeal, saveItem, deleteMeal } = useUser();
     const [meals, setMeals] = useState(user?.meals || []);
-    //const [meals, setMeals] = useState([]);
+    //const [meals, setMeals] = useState([]); // Old way of operating before user specific meals setup
     const [editedMeals, setEditedMeals] = useState([]);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [items, setItems] = useState(user?.items || []);
-    //const [items, setItems] = useState([]);    
+    //const [items, setItems] = useState([]); // Old way of operating before user specific items setup
     const [search, setSearch] = useState("");
     const [newMealName, setNewMealName] = useState("");
     const [selectedMeal, setSelectedMeal] = useState(null);
@@ -132,28 +133,45 @@ const CreateMeals = () => {
             return;
         }
         setError("");
-        setMeals([...meals, { name: newMealName, items: [{ name: "", size: "", link: "", tags: "" }] }]);
+        //setMeals([...meals, { name: newMealName, items: [{ name: "", size: "", link: "", tags: "" }] }]); // Only setting meals on save now to ensure database and front end are always aligned
         setSelectedMeal(newMealName);
         setMealItems([{ name: "", size: "", link: "", tags: "" }]);
         setEditingMode(true);
         //setIsMealPopupOpen(true); // DEPRECATED - now showing meals on main page
         setNewMealName("");
         setRecipeLink("");
+        setHasUnsavedChanges(true);
+    };
+
+    const handleNavigation = (action) => {
+        if (hasUnsavedChanges) {
+            const confirmDiscard = window.confirm(
+                "You have unsaved changes. Are you sure you want to continue? Unsaved changes will be lost."
+            );
+            if (!confirmDiscard) {
+                return; // Cancel navigation
+            }
+        }
+        action(); // Proceed with navigation
     };
 
     const handleSelectMeal = (meal) => {
-        setSelectedMeal(meal.name);
-        setMealItems(meal.items || []); // Populate rows with meal items
-        setRecipeLink(meal.recipe || "");
-        setEditingMode(true);
-        //setIsMealPopupOpen(true); // DEPRECATED - now showing meals on main page
+        handleNavigation(() => {
+            setSelectedMeal(meal.name);
+            setMealItems(meal.items  ? JSON.parse(JSON.stringify(meal.items)) : []); // Deep copy to prevent changes being reflected in underlying user.meals data as this should only be updated when user selects to save meal
+            setRecipeLink(meal.recipe || "");
+            setEditingMode(true);
+            setHasUnsavedChanges(false);
+            //setIsMealPopupOpen(true); // DEPRECATED - now showing meals on main page
+        });
     };
 
     const handleAddItemToMeal = (item) => {
         const newItemsList = mealItems;
         newItemsList.push(item);
         setMealItems(newItemsList);
-        setMeals((prevMeals) => {
+        setHasUnsavedChanges(true);
+        /*setMeals((prevMeals) => { // Only setting meals on save now to ensure database and front end are always aligned
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
                     return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
@@ -164,14 +182,14 @@ const CreateMeals = () => {
         });
         if (editedMeals.some(item => selectedMeal === item)) {
             setEditedMeals([...editedMeals, selectedMeal]);
-        }
+        }*/
     };
 
     // DEPRECATED - using handleRemoveRow now instead
     const handleRemoveMealItem = (index) => {
         const newItemsList = mealItems.filter((item, idx) => idx !== index);
         setMealItems(newItemsList);
-        setMeals((prevMeals) => {
+        /*setMeals((prevMeals) => { // Only setting meals on save now to ensure database and front end are always aligned
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
                     return { name: selectedMeal, items: newItemsList, recipe: recipeLink };
@@ -182,7 +200,7 @@ const CreateMeals = () => {
         });
         if (editedMeals.some(item => selectedMeal === item)) {
             setEditedMeals([...editedMeals, selectedMeal]);
-        }
+        }*/
     };
 
     const checkPlaceholderItem = (item) => { // function to check if an item is just a placeholder and not an actual grocery store item
@@ -215,7 +233,8 @@ const CreateMeals = () => {
 
     const handleAddMealRecipe = (recipe) => {
         setRecipeLink(recipe);
-        setMeals((prevMeals) => {
+        setHasUnsavedChanges(true);
+        /*setMeals((prevMeals) => { // Only setting meals on save now to ensure database and front end are always aligned
             const updatedMeals = prevMeals.map((meal) => {
                 if (meal.name === selectedMeal) {
                     return { name: selectedMeal, items: mealItems, recipe: recipe };
@@ -226,7 +245,7 @@ const CreateMeals = () => {
         });
         if (editedMeals.some(item => selectedMeal === item)) {
             setEditedMeals([...editedMeals, selectedMeal]);
-        }
+        }*/
     };
 
     const handleStoreMeal = async () => {
@@ -254,6 +273,7 @@ const CreateMeals = () => {
 
             if (data.success) {
                 toast.success("Meal saved!", { position: "top-center" });
+                setHasUnsavedChanges(false);
             } else {
                 toast.error("Error saving meal.", { position: "top-center" });
             }
@@ -299,7 +319,10 @@ const CreateMeals = () => {
 
             // Reset to initial view
             setShowDeletePopup(false);
-            setDeleteConfirmation(true);
+            //setDeleteConfirmation(true); // Using toast alert instead now
+            setSelectedMeal(null);
+            setEditingMode(false);
+            setHasUnsavedChanges(false);
         } catch (error) {
             console.error("Error deleting meal:", error);
             alert("Failed to delete meal. Please try again.");
@@ -307,9 +330,12 @@ const CreateMeals = () => {
     };
 
     const handleGoBack = () => {
-        setEditingMode(false);
-        setSelectedMeal(null);
-        //setIsMealPopupOpen(false); // DEPRECATED - now showing meals on main page
+        handleNavigation(() => {
+            setEditingMode(false);
+            setSelectedMeal(null);
+            setHasUnsavedChanges(false);
+            //setIsMealPopupOpen(false); // DEPRECATED - now showing meals on main page
+        });
     };
 
     const parseTags = (input) => {
@@ -353,6 +379,7 @@ const CreateMeals = () => {
         const updatedRows = [...mealItems];
         updatedRows[rowIndex][field] = value;
         setMealItems(updatedRows);
+        setHasUnsavedChanges(true);
     };
     
     const handleAddRow = () => {
@@ -362,6 +389,7 @@ const CreateMeals = () => {
     const handleRemoveRow = (rowIndex) => {
         const updatedItems = mealItems.filter((_, index) => index !== rowIndex);
         setMealItems(updatedItems);
+        setHasUnsavedChanges(true);
     };
 
     const removeCartItem = (mealIndex, itemIndex) => {
@@ -485,6 +513,7 @@ const CreateMeals = () => {
         setExternalResults([]);
         setSearchCompleteStatement("");
         setSearch("");
+        setHasUnsavedChanges(true);
             
         /*setMeals((prevMeals) => {
             const updatedMeals = prevMeals.map((meal) => {
@@ -784,6 +813,7 @@ const CreateMeals = () => {
         setExtractIngredientsPopupOpen(false);
         setExtractIngredientsLoading(false);
         setExtractedIngredients([]);
+        setHasUnsavedChanges(true);
     };
 
     const extractPopupClose = () => {
@@ -858,7 +888,7 @@ const CreateMeals = () => {
 
     return (
         <div className="create-meals-container">
-            <Tabs />
+            <Tabs handleNavigation={handleNavigation} />
             <ToastContainer />
             <div className="top-section-create">
                 <div className="header">
