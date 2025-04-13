@@ -553,7 +553,7 @@ app.post("/extract-ingredients", async (req, res) => {
 
     try {
 
-        const { recipeTextOrImage, itemNames, extractFrom } = req.body;
+        const { recipeTextOrImage, extractFrom } = req.body;
 
         const openai = new OpenAI({
           apiKey: process.env.OPENAI_API_KEY,
@@ -565,12 +565,17 @@ app.post("/extract-ingredients", async (req, res) => {
 
             console.log("Constructing query for text")
 
+            /* DEPRECATED, no longer using database items, just return regular list of items and quantities instead
             const prompt = `
             Extract the ingredients and quantities if possible from the following text: ${recipeTextOrImage}.
             Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
             Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
             The suggestedItem should match exactly the wording from the list provided, and if no suitable item is found please write "None found".
-            `;
+            `;*/
+
+            const prompt = `
+            Extract the ingredients and quantities if possible from the following text: ${recipeTextOrImage}.
+            Return an array of objects with 'ingredient', 'quantity' and 'confidenceScore'.`
 
             // Open AI querying
             aiResponse = await openai.responses.create({
@@ -591,10 +596,10 @@ app.post("/extract-ingredients", async (req, res) => {
                                         "properties": {
                                             "ingredient": {"type": "string"},
                                             "quantity": {"type": "string"},
-                                            "suggestedItem": {"type": "string"},
+                                            //"suggestedItem": {"type": "string"}, // DEPRECATED, no longer using database of items
                                             "confidenceScore": {"type": "number"}
                                         },
-                                        "required": ["ingredient", "quantity", "suggestedItem", "confidenceScore"],
+                                        "required": ["ingredient", "quantity", "confidenceScore"],
                                         "additionalProperties": false
                                     }
                                 }
@@ -615,6 +620,7 @@ app.post("/extract-ingredients", async (req, res) => {
 
             console.log("Getting ingredients from image")
 
+            /* DEPRECATED, no longer using database items, just return regular list of items and quantities instead
             const promptIngredients = `Extract the ingredients and quantities if possible from the attached image.`;
 
             // Open AI querying
@@ -634,7 +640,11 @@ app.post("/extract-ingredients", async (req, res) => {
             Extract the ingredients and quantities if possible from the following text: ${aiResponseIngredients.output_text}.
             Then, match each ingredient to the most suitable item from this list: ${JSON.stringify(itemNames)}.
             Return an array of objects with 'ingredient', 'quantity', 'suggestedItem', and 'confidenceScore'.
-            `;
+            `;*/
+
+            const prompt = `
+            Extract the ingredients and quantities if possible from the attached image.
+            Return an array of objects with 'ingredient', 'quantity', and 'confidenceScore'.`;
 
             // Open AI querying
             aiResponse = await openai.responses.create({
@@ -655,10 +665,10 @@ app.post("/extract-ingredients", async (req, res) => {
                                         "properties": {
                                             "ingredient": {"type": "string"},
                                             "quantity": {"type": "string"},
-                                            "suggestedItem": {"type": "string"},
+                                            //"suggestedItem": {"type": "string"}, // DEPRECATED, no longer using database of items
                                             "confidenceScore": {"type": "number"}
                                         },
-                                        "required": ["ingredient", "quantity", "suggestedItem", "confidenceScore"],
+                                        "required": ["ingredient", "quantity", "confidenceScore"],
                                         "additionalProperties": false
                                     }
                                 }

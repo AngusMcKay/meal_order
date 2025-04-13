@@ -166,9 +166,26 @@ const CreateMeals = () => {
         });
     };
 
+    const isBlankItem = (item) => {
+        return (
+            !item.name && // Name is empty
+            !item.size && // Size is empty
+            !item.link && // Link is empty
+            (!item.tags || item.tags.length === 0) // Tags are empty
+        );
+    };
+    
     const handleAddItemToMeal = (item) => {
-        const newItemsList = mealItems;
-        newItemsList.push(item);
+        const newItemsList = [...mealItems];
+
+        // Check if the first item is blank
+        if (newItemsList.length === 1 && isBlankItem(newItemsList[0])) {
+            // Replace the blank first item with the new item
+            newItemsList[0] = item;
+        } else {
+            // Add the new item to the list
+            newItemsList.push(item);
+        }
         setMealItems(newItemsList);
         setHasUnsavedChanges(true);
         /*setMeals((prevMeals) => { // Only setting meals on save now to ensure database and front end are always aligned
@@ -719,12 +736,13 @@ const CreateMeals = () => {
                 setExtractIngredientsInputs(false);
                 setExtractIngredientsLoading(true);
                 const recipeTextOrImage = recipeText;
-                const itemNames = items.map(item => item.name); // item.name + "(" + `{item.size ? item.size.value : ""}` + ")" // Can try this again later with cut down list
+                //const itemNames = items.map(item => item.name); // item.name + "(" + `{item.size ? item.size.value : ""}` + ")" // DEPRECATED, no longer using database of items
                 const extractFrom = 'text'
                 const response = await fetch(`${API_BASE_URL}/extract-ingredients`, {
                     method: "POST",
                     headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
-                    body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
+                    //body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }), DEPRECATED, no longer using database of items
+                    body: JSON.stringify({ recipeTextOrImage, extractFrom }),
                 });
 
                 console.log(response.ok);
@@ -736,8 +754,8 @@ const CreateMeals = () => {
                 const data = await response.json();
                 setExtractIngredientsLoading(false);
 
-                // Map extracted ingredients to include full item details
-                const updatedIngredients = data.ingredients.map((ingredient) => {
+                // Map extracted ingredients to include full item details - DEPRECATED, no longer using database of items
+                /*const updatedIngredients = data.ingredients.map((ingredient) => {
                     if (ingredient.suggestedItem) {
                         const matchedItem = items.find(
                             (item) => item.name.trim() === ingredient.suggestedItem.trim()
@@ -749,9 +767,10 @@ const CreateMeals = () => {
                         };
                     }
                     return ingredient;
-                });
+                });*/
 
-                setExtractedIngredients(updatedIngredients); // Store extracted ingredients
+                //setExtractedIngredients(updatedIngredients); // DEPRECATED, no longer using database of items
+                setExtractedIngredients(data.ingredients); // Store extracted ingredients
             } catch (error) {
                 console.error("Failed to extract ingredients:", error);
             }
@@ -769,12 +788,13 @@ const CreateMeals = () => {
                 setExtractIngredientsInputs(false);
                 setExtractIngredientsLoading(true);
                 const recipeTextOrImage = imageBase64;
-                const itemNames = items.map(item => item.name);
+                //const itemNames = items.map(item => item.name); // DEPRECATED, no longer using database of items
                 const extractFrom = 'image'
                 const response = await fetch(`${API_BASE_URL}/extract-ingredients`, {
                     method: "POST",
                     headers: { "ngrok-skip-browser-warning": "true", "Content-Type": "application/json" },
-                    body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }),
+                    //body: JSON.stringify({ recipeTextOrImage, itemNames, extractFrom }), // DEPRECATED, no longer using database of items
+                    body: JSON.stringify({ recipeTextOrImage, extractFrom }),
                 });
 
                 console.log(response.ok);
@@ -786,8 +806,8 @@ const CreateMeals = () => {
                 const data = await response.json();
                 setExtractIngredientsLoading(false);
 
-                // Map extracted ingredients to include full item details
-                const updatedIngredients = data.ingredients.map((ingredient) => {
+                // Map extracted ingredients to include full item details - DEPRECATED, no longer using database of items
+                /*const updatedIngredients = data.ingredients.map((ingredient) => {
                     if (ingredient.suggestedItem) {
                         const matchedItem = items.find(
                             (item) => item.name.trim() === ingredient.suggestedItem.trim()
@@ -799,17 +819,32 @@ const CreateMeals = () => {
                         };
                     }
                     return ingredient;
-                });
+                });*/
 
-                setExtractedIngredients(updatedIngredients); // Store extracted ingredients
+                //setExtractedIngredients(updatedIngredients); // DEPRECATED, no longer using database of items
+                setExtractedIngredients(data.ingredients);
             } catch (error) {
                 console.error("Failed to extract ingredients:", error);
             }
         }
     };
 
-    const createMealFromExtraction = async () => {
-        await extractedIngredients.forEach((ingredient) => handleAddItemToMeal(ingredient.fullItem))
+    const createMealFromExtraction = () => {
+        // Map extracted ingredients to the format expected by mealItems
+        const newItems = extractedIngredients.map((ingredient) => ({
+            name: ingredient.ingredient,
+            size: ingredient.quantity,
+            link: "",
+            tags: [],
+        }));
+
+        // Check if the first item is blank and replace it if necessary
+        const updatedItems = mealItems.length === 1 && isBlankItem(mealItems[0])
+            ? [...newItems]
+            : [...mealItems, ...newItems];
+
+        // Update the state with the new items
+        setMealItems(updatedItems);
         setExtractIngredientsPopupOpen(false);
         setExtractIngredientsLoading(false);
         setExtractedIngredients([]);
@@ -1276,7 +1311,7 @@ const CreateMeals = () => {
                         )}
 
                         {extractIngredientsLoading ? (
-                            <div className="loading-message">Reading recipe, decyphering ingredients and finding appropriate items, please be patient...<div className="loading-spinner"></div></div>
+                            <div className="loading-message">Reading recipe, decyphering ingredients and quantities, it can take a few seconds...<div className="loading-spinner"></div></div>
                         ) : (
                             <>
                             </>
@@ -1287,7 +1322,7 @@ const CreateMeals = () => {
                                 <div className="items-list">
                                     {extractedIngredients.map((ingredient) => (
                                         <div className="item-extracted" key={ingredient.ingredient} onMouseEnter={(event) => handleMouseEnter(event, ingredient.fullItem)} onMouseLeave={() => setHoveredItem(null)}>
-                                            {ingredient.ingredient} ({ingredient.quantity}): {!checkPlaceholderItem(ingredient.fullItem) ? (
+                                            {ingredient.ingredient} {ingredient.quantity? `(${ingredient.quantity})` : ""}, confidence: {ingredient.confidenceScore}{/*}: {!checkPlaceholderItem(ingredient.fullItem) ? (
                                                 <span>
                                                     {ingredient.fullItem.name}{ingredient.fullItem.size ? ` (${ingredient.fullItem.size.value})` : ""}{ingredient.fullItem.price ? `, £${ingredient.fullItem.price.current.amount}` : ""}
                                                     <sup>
@@ -1301,11 +1336,12 @@ const CreateMeals = () => {
                                                 </span>
                                             ) : (
                                                 <span className="extract-fail-warning" title="Clicking 'Add Items' will add this item as a placeholder which can then be replaced by an actual grocery store item once found, or kept as a placeholder as a reminder to add manually" data-toggle="tooltip">⚠️ No match found ⓘ</span>
-                                            )}
+                                            )}*/}
+                                            <button className="add-item-button" onClick={() => handleAddItemToMeal({ name: ingredient.ingredient, size: ingredient.quantity })}>Add</button>
                                         </div>
                                     ))}
                                 </div>
-                                <button className="extract-create-meal" onClick={() => createMealFromExtraction()}>Add Items</button>
+                                <button className="extract-create-meal" onClick={() => createMealFromExtraction()}>Add All</button>
                                 <button className="extract-cancel" onClick={() => extractPopupClose()}>Cancel</button>
                             </>
                         )}
