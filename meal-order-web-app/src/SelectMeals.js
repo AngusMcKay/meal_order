@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Tabs from "./Tabs";
 import "./SelectMeals.css";
 import "./Generic.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { loadBasketMorrisons } from './Selenium.js'
 import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
 import io from "socket.io-client";
@@ -115,6 +117,7 @@ const SelectMeals = () => {
         const selectedOrder = mealsData.find((m) => m.name === selectedMeal).items.filter((item, index) => selectedItems[index] && !checkPlaceholderItem(item)) // Object.keys(selectedItems).filter((item) => selectedItems[item]);
         if (selectedOrder.length > 0) {
             setOrderList((prevOrders) => [...prevOrders, { meal: selectedMeal, items: selectedOrder }]);
+            toast.success("Meal added!", { position: "top-center" });
         }
     };
 
@@ -295,6 +298,7 @@ const SelectMeals = () => {
     return (
         <div className="meal-container">
             <Tabs />
+            <ToastContainer />
             <div className="top-section-meals"> 
                 <div className="header">
                     {/*<button className="home-button" onClick={() => window.location.href = "/"}>Home</button>*/}
