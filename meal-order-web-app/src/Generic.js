@@ -27,9 +27,57 @@ export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCart
 	            )}
 	        </div>
 	        <div className='cart-sidebar-bottom'>
-	            <button className="export-order-button" onClick={() => loadBasket(orderList)}>Export Order</button>
+	            <button className="export-order-button" onClick={() => loadBasket(orderList)}>Ready to Order</button>
 	        </div>
 	    </>
+    );
+};
+
+export const OrderTablePopup = ({ orderList, onClose, openAllLinks }) => {
+    return (
+        <div className="order-table-popup-overlay">
+            <div className="order-table-popup">
+                <span className="popup-close-button" onClick={onClose}>✖</span>
+                <h3>Shopping List</h3>
+                <table className="order-table">
+                    <thead>
+                        <tr>
+                            <th>Meal/Category</th>
+                            <th>Item</th>
+                            <th>Size</th>
+                            <th>Link</th>
+                            <th>Ordered</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {orderList.map((order, mealIndex) =>
+                            order.items.map((item, itemIndex) => (
+                                <tr key={`${mealIndex}-${itemIndex}`}>
+                                    <td>{order.meal}</td>
+                                    <td>{item.name}</td>
+                                    <td>{item.size}</td>
+                                    <td>
+                                        {item.link ? (
+                                            <a href={item.link} target="_blank" rel="noopener noreferrer">
+                                                View
+                                            </a>
+                                        ) : (
+                                            "N/A"
+                                        )}
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" />
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+                <div className="order-table-popup-buttons">
+                    <button className="order-table-button" onClick={openAllLinks}>Open All Links</button>
+                </div>
+            </div>
+        </div>
     );
 };
 

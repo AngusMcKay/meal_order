@@ -5,7 +5,7 @@ import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loadBasketMorrisons } from './Selenium.js'
-import { CartSidebar, LoadingBasketPopup } from "./Generic.js";
+import { CartSidebar, OrderTablePopup, LoadingBasketPopup } from "./Generic.js";
 import io from "socket.io-client";
 import { useUser } from "./context/UserContext";
 
@@ -49,6 +49,7 @@ const CreateMeals = () => {
     const [externalResults, setExternalResults] = useState([]);
     const [popupLoading, setPopupLoading] = useState(false);
     const [searchCompleteStatement, setSearchCompleteStatement] = useState("");
+    const [orderTablePopup, setOrderTablePopup] = useState(false);
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
@@ -580,25 +581,42 @@ const CreateMeals = () => {
         setSearch("");
     };
 
-    const loadBasket = async (orderList) => {
-        setFailedItems([]);
-        let orderResponse = {};
-        let orderFails = [];
-        try {
-            setLoadingBasketPopup(true);
-            setLoadingBasket(true);
-            orderResponse = await loadBasketMorrisons(orderList);
-            if (orderResponse.success === true) {
-                orderFails = orderResponse.failedItems;
-            } else {
-                checkForExtension();
+    const loadBasket = async (orderList, orderType = "tablePopup") => {
+
+        if (orderType === "tablePopup") {
+            // Prepare data for the table popup
+            setOrderTablePopup(true);
+        
+        } else if (orderType === "autoOrderMorrisons") {
+            setFailedItems([]);
+            let orderResponse = {};
+            let orderFails = [];
+            try {
+                setLoadingBasketPopup(true);
+                setLoadingBasket(true);
+                orderResponse = await loadBasketMorrisons(orderList);
+                if (orderResponse.success === true) {
+                    orderFails = orderResponse.failedItems;
+                } else {
+                    checkForExtension();
+                }
+            } catch (error) {
+                console.error("Error exporting items:", error);
+            } finally {
+                setLoadingBasket(false);
+                setFailedItems(orderFails);
             }
-        } catch (error) {
-            console.error("Error exporting items:", error);
-        } finally {
-            setLoadingBasket(false);
-            setFailedItems(orderFails);
         }
+    };
+    
+    const openAllLinks = () => {
+        orderList.forEach((order) => {
+            order.items.forEach((item) => {
+                if (item.link) {
+                    window.open(item.link, "_blank");
+                }
+            });
+        });
     };
 
     const basketPopupClose = () => {
@@ -1193,6 +1211,14 @@ const CreateMeals = () => {
                     basketPopupClose={basketPopupClose}
                     failedItems={failedItems}
                     orderProgress={orderProgress}
+                />
+            )}
+
+            {orderTablePopup && (
+                <OrderTablePopup
+                    orderList={orderList}
+                    onClose={() => setOrderTablePopup(false)}
+                    openAllLinks={openAllLinks}
                 />
             )}
 

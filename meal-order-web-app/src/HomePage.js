@@ -5,7 +5,7 @@ import { Tooltip } from "@mui/material";
 import "./HomePage.css";
 import "./Generic.css";
 import { loadBasketMorrisons } from './Selenium.js'
-import { CartSidebar, LoadingBasketPopup, ExtCookiePopup } from "./Generic.js";
+import { CartSidebar, OrderTablePopup, LoadingBasketPopup, ExtCookiePopup } from "./Generic.js";
 import io from "socket.io-client";
 import { useUser } from "./context/UserContext";
 
@@ -31,6 +31,7 @@ const HomePage = () => {
         return savedCartPosition ? JSON.parse(savedCartPosition) : false;
     });
     const [clearCartPopup, setClearCartPopup] = useState(false);
+    const [orderTablePopup, setOrderTablePopup] = useState(false);
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
@@ -92,25 +93,42 @@ const HomePage = () => {
         setClearCartPopup(false);  
     };
 
-    const loadBasket = async (orderList) => {
-        setFailedItems([]);
-        let orderResponse = {};
-        let orderFails = [];
-        try {
-            setLoadingBasketPopup(true);
-            setLoadingBasket(true);
-            orderResponse = await loadBasketMorrisons(orderList);
-            if (orderResponse.success === true) {
-                orderFails = orderResponse.failedItems;
-            } else {
-                checkForExtension('init');
+    const loadBasket = async (orderList, orderType = "tablePopup") => {
+    
+        if (orderType === "tablePopup") {
+            // Prepare data for the table popup
+            setOrderTablePopup(true);
+        
+        } else if (orderType === "autoOrderMorrisons") {
+            setFailedItems([]);
+            let orderResponse = {};
+            let orderFails = [];
+            try {
+                setLoadingBasketPopup(true);
+                setLoadingBasket(true);
+                orderResponse = await loadBasketMorrisons(orderList);
+                if (orderResponse.success === true) {
+                    orderFails = orderResponse.failedItems;
+                } else {
+                    checkForExtension();
+                }
+            } catch (error) {
+                console.error("Error exporting items:", error);
+            } finally {
+                setLoadingBasket(false);
+                setFailedItems(orderFails);
             }
-        } catch (error) {
-            console.error("Error exporting items:", error);
-        } finally {
-            setLoadingBasket(false);
-            setFailedItems(orderFails);
         }
+    };
+    
+    const openAllLinks = () => {
+        orderList.forEach((order) => {
+            order.items.forEach((item) => {
+                if (item.link) {
+                    window.open(item.link, "_blank");
+                }
+            });
+        });
     };
 
     const basketPopupClose = () => {
@@ -283,6 +301,14 @@ const HomePage = () => {
                         basketPopupClose={basketPopupClose}
                         failedItems={failedItems}
                         orderProgress={orderProgress}
+                    />
+                )}
+
+                {orderTablePopup && (
+                    <OrderTablePopup
+                        orderList={orderList}
+                        onClose={() => setOrderTablePopup(false)}
+                        openAllLinks={openAllLinks}
                     />
                 )}
 
