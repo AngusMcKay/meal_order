@@ -573,43 +573,49 @@ const SelectItems = () => {
                 <hr className='page-break-line'></hr>
 
                 <div className="select-item-category">
-                    <span className="create-item-title" data-tooltip="Create new items and add to Shopping List or save for adding later. Tagging items (e.g. freezer) will make it easier to filter and streamline Shopping List creation.">
-                    <span className="info-sign">ⓘ</span> Create new item: 
-                    </span>
-                    <input 
-                        type="text"
-                        placeholder="Item name"
-                        className="create-item-name"
-                        value={newItemName}
-                        onChange={(e) => setNewItemName(e.target.value)}
-                        title="Required: item name"
-                    />
-                    <input 
-                        type="text"
-                        placeholder="Size*"
-                        className="create-item-quantity"
-                        value={newItemQuantity}
-                        onChange={(e) => setNewItemQuantity(e.target.value)}
-                        title="Optional: add a link to external site for future reference"
-                    />
-                    <input 
-                        type="text"
-                        placeholder="Link*"
-                        className="create-item-link"
-                        value={newItemLink}
-                        onChange={(e) => setNewItemLink(e.target.value)}
-                        title="Optional: add a link to external site for future reference"
-                    />
-                    <input 
-                        type="text"
-                        placeholder="Tags*"
-                        className="create-item-tags"
-                        value={newItemTags}
-                        onChange={(e) => setNewItemTags(e.target.value)}
-                        title="Optional: add tags separated by spaces and/or commas to help with filtering saved items"
-                    />
-                    <button className="save-item-button" onClick={() => handleAddNewItemToOrder()}>Add to Shopping List</button>
-                    <button className="save-item-button" onClick={() => handleSaveItem()}>Save Item</button>
+                    <div className="create-items-sections">
+                        <span className="create-item-title" data-tooltip="Create new items and add to Shopping List or save for adding later. Tagging items (e.g. freezer) will make it easier to filter and streamline Shopping List creation.">
+                        <span className="info-sign">ⓘ</span> Create new item: 
+                        </span>
+                    </div>
+                    <div className="create-items-sections">
+                        <input 
+                            type="text"
+                            placeholder="Item name"
+                            className="create-item-name"
+                            value={newItemName}
+                            onChange={(e) => setNewItemName(e.target.value)}
+                            title="Required: item name"
+                        />
+                        <input 
+                            type="text"
+                            placeholder="Size*"
+                            className="create-item-quantity"
+                            value={newItemQuantity}
+                            onChange={(e) => setNewItemQuantity(e.target.value)}
+                            title="Optional: add size or quantity"
+                        />
+                        <input 
+                            type="text"
+                            placeholder="Link*"
+                            className="create-item-link"
+                            value={newItemLink}
+                            onChange={(e) => setNewItemLink(e.target.value)}
+                            title="Optional: add a link to external site for future reference"
+                        />
+                        <input 
+                            type="text"
+                            placeholder="Tags*"
+                            className="create-item-tags"
+                            value={newItemTags}
+                            onChange={(e) => setNewItemTags(e.target.value)}
+                            title="Optional: add tags separated by spaces and/or commas to help with filtering saved items"
+                        />
+                    </div>
+                    <div className="create-items-sections">
+                        <button className="save-item-button" onClick={() => handleAddNewItemToOrder()}>Add to Shopping List</button>
+                        <button className="save-item-button" onClick={() => handleSaveItem()}>Save Item</button>
+                    </div>
                     <div className="external-search-link" onClick={() => setShowPopup(true)}>
                         🔍 Search store for items
                     </div>
@@ -618,7 +624,9 @@ const SelectItems = () => {
                 <hr className='page-break-line'></hr>
 
                 <div className="select-item-category">
-                    <span className="create-item-title">Search pre-saved items: </span>
+                    <div className="create-items-sections">
+                        <span className="create-item-title">Search pre-saved items: </span>
+                    </div>
                     <input 
                         className="search-bar" 
                         type="text" 
@@ -652,7 +660,7 @@ const SelectItems = () => {
                 {loading ? (
                     <div className="loading-message">Finding items...<div className="loading-spinner"></div></div>
                 ) : filteredItems.length === 0 ? (
-                    <div className="no-items-message">No items match the selected tags and search term.</div>
+                    <div className="items-description">No items match the selected tags and search term.</div>
                 ) : (
                     <div className="items-list">
                         {filteredItems.filter(item => item.name.toLowerCase().includes(search.toLowerCase())).map((item) => (

@@ -1086,7 +1086,7 @@ const CreateMeals = () => {
                                             <input
                                                 type="text"
                                                 placeholder="Item name"
-                                                className="create-item-name"
+                                                className="create-item-name-meals"
                                                 value={item.name}
                                                 onChange={(e) => handleRowChange(index, "name", e.target.value)}
                                                 title="Required: item name"
@@ -1094,7 +1094,7 @@ const CreateMeals = () => {
                                             <input
                                                 type="text"
                                                 placeholder="Size*"
-                                                className="create-item-quantity"
+                                                className="create-item-quantity-meals"
                                                 value={item.size? item.size : ""}
                                                 onChange={(e) => handleRowChange(index, "size", e.target.value)}
                                                 title="Optional: size or quantity"
