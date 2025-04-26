@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
 
 const getOrCreateAnonymousId = () => {
     let anonId = localStorage.getItem("anon_user_id");
@@ -16,7 +17,7 @@ export const UserContextProvider = ({ children }) => {
     const anonUserId = getOrCreateAnonymousId();
 
     useEffect(() => {
-        fetch(`http://localhost:5000/user/get-user?anonUserId=${anonUserId}`)
+        fetch(`${API_BASE_URL}/user/get-user?anonUserId=${anonUserId}`)
             .then(res => res.json())
             .then(data => {
                 //console.log("User fetched:", data.user); // for debugging
@@ -27,7 +28,7 @@ export const UserContextProvider = ({ children }) => {
 
     const saveMeal = async (meal) => {
 	    try {
-	        const response = await fetch(`http://localhost:5000/user/save-meal`, {
+	        const response = await fetch(`${API_BASE_URL}/user/save-meal`, {
 	            method: "POST",
 	            headers: { "Content-Type": "application/json" },
 	            body: JSON.stringify({ meal, anonUserId }),
@@ -51,7 +52,7 @@ export const UserContextProvider = ({ children }) => {
     const saveItem = async (item) => {
         try {
             console.log(`Saving item to user: ${anonUserId}`)
-	        const response = await fetch(`http://localhost:5000/user/save-item`, {
+	        const response = await fetch(`${API_BASE_URL}/user/save-item`, {
 	            method: "POST",
 	            headers: { "Content-Type": "application/json" },
 	            body: JSON.stringify({ item, anonUserId }),
@@ -74,7 +75,7 @@ export const UserContextProvider = ({ children }) => {
 
     const deleteMeal = async (mealName) => {
         try {
-            const response = await fetch(`http://localhost:5000/user/delete-meal`, {
+            const response = await fetch(`${API_BASE_URL}/user/delete-meal`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ mealName, anonUserId }),
@@ -97,7 +98,7 @@ export const UserContextProvider = ({ children }) => {
 
     const deleteItem = async (itemName) => {
         try {
-            const response = await fetch(`http://localhost:5000/user/delete-item`, {
+            const response = await fetch(`${API_BASE_URL}/user/delete-item`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ itemName, anonUserId }),

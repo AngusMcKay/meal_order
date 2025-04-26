@@ -8,6 +8,7 @@ const axios = require("axios");
 const https = require('https');
 const OpenAI = require("openai");
 const userRoutes = require("./userRoutes");
+const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
 
 const app = express();
 app.use(cors({
@@ -15,10 +16,10 @@ app.use(cors({
         "*",
         "http://localhost:3000",
         "http://192.168.1.165:3000",
-        "https://3601-146-200-183-146.ngrok-free.app",
+        API_BASE_URL,
         "chrome-extension://hhoihhpmoidknndoahijkpomcjgmloaa"
     ],
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     credentials: true
 })); // Important for cookies/sessions));
@@ -55,6 +56,7 @@ io.on("connection", (socket) => {
 app.options("*", (req, res) => {
     res.sendStatus(200);
 });
+//app.options("*", cors()); // Enable pre-flight across-the-board
 
 // Check if MongoDB URI is properly loaded
 if (!process.env.MONGO_URI) {
