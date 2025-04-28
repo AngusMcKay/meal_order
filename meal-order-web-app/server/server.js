@@ -11,14 +11,26 @@ const userRoutes = require("./userRoutes");
 const API_BASE_URL = process.env.REACT_APP_SERVER_HOST;
 
 const app = express();
+
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://localhost", // used when running on mobile on local network
+    "http://192.168.1.165:3000",
+    "https://887a-146-200-183-198.ngrok-free.app", // API_BASE_URL,
+    "chrome-extension://hhoihhpmoidknndoahijkpomcjgmloaa"
+];
 app.use(cors({
-    origin: [
-        "*",
-        "http://localhost:3000",
-        "http://192.168.1.165:3000",
-        API_BASE_URL,
-        "chrome-extension://hhoihhpmoidknndoahijkpomcjgmloaa"
-    ],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or Postman)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            console.error("CORS error: Origin not allowed:", origin);
+            return callback(new Error("Not allowed by CORS"));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     credentials: true
@@ -30,11 +42,11 @@ app.use("/user", userRoutes);
 // Logging activity to help debugging
 app.use((req, res, next) => {
     console.log(`🔵 Received ${req.method} request for ${req.url}`);
-    //res.setHeader("Access-Control-Allow-Origin", "*");
-    //res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-    //res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, ngrok-skip-browser-warning");
-    //res.setHeader("Access-Control-Allow-Credentials", "true");
-    //res.setHeader("Connection", "keep-alive");
+    /*res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, ngrok-skip-browser-warning");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Connection", "keep-alive");*/
     next();
 });
 
@@ -53,9 +65,9 @@ io.on("connection", (socket) => {
 });
 
 // Explicitly handle OPTIONS requests
-app.options("*", (req, res) => {
+/*app.options("*", (req, res) => {
     res.sendStatus(200);
-});
+});*/
 //app.options("*", cors()); // Enable pre-flight across-the-board
 
 // Check if MongoDB URI is properly loaded

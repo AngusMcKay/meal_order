@@ -130,7 +130,7 @@ router.delete("/delete-meal", findOrCreateUser, async (req, res) => {
         const { mealName } = req.body.mealName;
         req.user.meals = req.user.meals.filter(meal => meal.name !== mealName);
         await req.user.save(); // Save changes to DB
-        console.log("user after deleting meal:", req.user);
+        //console.log("user after deleting meal:", req.user); // useful for debugging
         res.json(req.user);
     } catch (error) {
         console.error("Error deleting meal:", error);
