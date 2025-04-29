@@ -1,5 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -7,6 +9,7 @@ const router = express.Router();
 const userSchema = new mongoose.Schema({
     anonIds: [{ type: String, unique: true }], // Supports multiple anonymous IDs
     email: { type: String, unique: true, sparse: true }, // Use email for login
+    password: { type: String }, // Hashed password for login
     meals: [{ name: String, items: [], recipe: String, tags: [] }],
     items: [{ name: String, size: String, link: String, tags: [] }],
 }, { timestamps: true });
