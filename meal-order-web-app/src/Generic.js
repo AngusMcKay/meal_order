@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState }  from "react";
 import "./Generic.css";
+import { useUser } from "./context/UserContext";
 
 export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCartItem, removeCartMeal, loadBasket, clearCartCheck }) => {
     return (
@@ -146,4 +147,66 @@ export const ExtCookiePopup = ({ extCookiePopupMessage, extCookiePopupLink, setS
             </div>
         </div>
 	);
+};
+
+export const AuthPopup = ({ showAuthPopup, setShowAuthPopup }) => {
+    const { login, register } = useUser();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setErrorMessage(""); // Clear any previous errors
+        try {
+            if (isRegistering) {
+                await register(email, password);
+                alert("Registration successful!");
+            } else {
+                await login(email, password);
+                alert("Login successful!");
+            }
+            setShowAuthPopup(false); // Close the popup after success
+        } catch (error) {
+            setErrorMessage(error.message || "An error occurred. Please try again.");
+        }
+    };
+
+    return (
+        showAuthPopup && (
+            <div className="auth-popup-overlay">
+                <div className="auth-popup">
+                    <span className="popup-close-button" onClick={() => setShowAuthPopup(false)}>✖</span>
+                    <h2>{isRegistering ? "Register" : "Login"}</h2>
+                    <button
+                        className="auth-toggle-button"
+                        onClick={() => setIsRegistering(!isRegistering)}
+                    >
+                        {isRegistering ? "Already registered? Click here to switch to login instead" : "Not yet registered? Click here to switch to registration"}
+                    </button>
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <button type="submit" className="auth-submit-button">
+                            {isRegistering ? "Register" : "Login"}
+                        </button>
+                    </form>
+                    {errorMessage && <p className="auth-error-message">{errorMessage}</p>}
+                </div>
+            </div>
+        )
+    );
 };

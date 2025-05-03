@@ -5,7 +5,7 @@ import { Tooltip } from "@mui/material";
 import "./HomePage.css";
 import "./Generic.css";
 import { loadBasketMorrisons } from './Selenium.js'
-import { CartSidebar, OrderTablePopup, LoadingBasketPopup, ExtCookiePopup } from "./Generic.js";
+import { CartSidebar, OrderTablePopup, LoadingBasketPopup, ExtCookiePopup, AuthPopup } from "./Generic.js";
 import io from "socket.io-client";
 import { useUser } from "./context/UserContext";
 
@@ -35,6 +35,9 @@ const HomePage = () => {
     const [loadingBasketPopup, setLoadingBasketPopup] = useState(false);
     const [loadingBasket, setLoadingBasket] = useState(false);
     const [failedItems, setFailedItems] = useState([]);
+
+    // Auth
+    const [showAuthPopup, setShowAuthPopup] = useState(false);
     
     // cookies stuff
     const [extensionExists, setExtensionExists] = useState(null);
@@ -251,6 +254,10 @@ const HomePage = () => {
             <Tabs />
             <div className="top-section-home">
                 <div className="header">
+                    <button className="auth-popup-trigger" onClick={() => setShowAuthPopup(true)}>
+                        Login / Register
+                    </button>
+                    <AuthPopup showPopup={showAuthPopup} setShowPopup={setShowAuthPopup} />
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
             </div>

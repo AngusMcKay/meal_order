@@ -26,6 +26,51 @@ export const UserContextProvider = ({ children }) => {
             .catch(err => console.error("Error fetching user:", err));
     }, [anonUserId]);
 
+    const login = async (email, password) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, anonUserId }),
+            });
+    
+            if (!response.ok) {
+                throw new Error("Failed to login");
+            }
+    
+            const data = await response.json();
+            console.log("Login successful:", data);
+    
+            // Optionally store the token in localStorage or state
+            localStorage.setItem("token", data.token);
+    
+            return { success: true, message: "Login successful" };
+        } catch (error) {
+            console.error("Error logging in:", error);
+        }
+    };
+    
+    const register = async (email, password) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, anonUserId }),
+            });
+    
+            if (!response.ok) {
+                throw new Error("Failed to register");
+            }
+    
+            const data = await response.json();
+            console.log("Registration successful:", data);
+    
+            return { success: true, message: "Registration successful" };
+        } catch (error) {
+            console.error("Error registering:", error);
+        }
+    };
+    
     const saveMeal = async (meal) => {
 	    try {
 	        const response = await fetch(`${API_BASE_URL}/user/save-meal`, {
@@ -120,7 +165,7 @@ export const UserContextProvider = ({ children }) => {
     };
 
     return (
-        <UserContext.Provider value={{ user, saveMeal, saveItem, deleteMeal, deleteItem }}>
+        <UserContext.Provider value={{ user, saveMeal, saveItem, deleteMeal, deleteItem, login, register }}>
             {children}
         </UserContext.Provider>
     );
