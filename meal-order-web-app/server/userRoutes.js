@@ -159,11 +159,31 @@ router.post("/login", async (req, res) => {
     }
 });
 
-
 // 📌 GET /get-user → Retrieve user data
 router.get("/get-user", findOrCreateUser, async (req, res) => {
     //console.log(`Sending user: ${req.user}`);  // for debugging
-    res.json({ user: req.user} );
+    //res.json({ user: req.user} );
+    console.log("Fetching user data...");
+
+    try {
+        const { anonUserId } = req.query;
+
+        if (!anonUserId) {
+            return res.status(400).json({ error: "Missing anonUserId" });
+        }
+
+        const user = await User.findOne({ anonIds: anonUserId });
+
+        if (!user) {
+            // Return an empty user object if no user exists
+            return res.status(200).json({ user: null });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error("Error in /get-user:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 // 📌 POST /save-meals → Save user meals

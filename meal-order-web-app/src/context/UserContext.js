@@ -17,13 +17,26 @@ export const UserContextProvider = ({ children }) => {
     const anonUserId = getOrCreateAnonymousId();
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/user/get-user?anonUserId=${anonUserId}`)
-            .then(res => res.json())
-            .then(data => {
-                //console.log("User fetched:", data.user); // for debugging
+        const fetchUser = async () => {
+            try {
+                console.log(`Fetching user from: ${API_BASE_URL}/user/get-user?anonUserId=${anonUserId}`);
+                const response = await fetch(`${API_BASE_URL}/user/get-user?anonUserId=${anonUserId}`, {
+                    headers: {'ngrok-skip-browser-warning': 'true'},
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch user: ${response.statusText}`);
+                }
+    
+                const data = await response.json();
                 setUser(data.user);
-            })
-            .catch(err => console.error("Error fetching user:", err));
+            } catch (error) {
+                console.error("Error fetching user:", error);
+                setUser(null); // Set user to null if fetching fails
+            }
+        };
+    
+        fetchUser();
     }, [anonUserId]);
 
     const login = async (email, password) => {
@@ -35,7 +48,7 @@ export const UserContextProvider = ({ children }) => {
             });
     
             if (!response.ok) {
-                throw new Error("Failed to login");
+                return { success: false, message: "Login failed" };
             }
     
             const data = await response.json();
@@ -59,7 +72,7 @@ export const UserContextProvider = ({ children }) => {
             });
     
             if (!response.ok) {
-                throw new Error("Failed to register");
+                return { success: false, message: "Registration failed" };
             }
     
             const data = await response.json();

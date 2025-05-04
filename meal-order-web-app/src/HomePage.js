@@ -255,9 +255,9 @@ const HomePage = () => {
             <div className="top-section-home">
                 <div className="header">
                     <button className="auth-popup-trigger" onClick={() => setShowAuthPopup(true)}>
-                        Login / Register
+                        👤 Login / Register
                     </button>
-                    <AuthPopup showPopup={showAuthPopup} setShowPopup={setShowAuthPopup} />
+                    <AuthPopup showAuthPopup={showAuthPopup} setShowAuthPopup={setShowAuthPopup} />
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
             </div>

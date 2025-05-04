@@ -5,7 +5,7 @@ import "./Generic.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { loadBasketMorrisons } from './Selenium.js'
-import { CartSidebar, OrderTablePopup, LoadingBasketPopup } from "./Generic.js";
+import { CartSidebar, OrderTablePopup, LoadingBasketPopup, AuthPopup } from "./Generic.js";
 import io from "socket.io-client";
 import { useUser } from "./context/UserContext";
 
@@ -51,6 +51,9 @@ const SelectItems = () => {
     const [hoveredItem, setHoveredItem] = useState(null);
     const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
     const [saveItemPopup, setSaveItemPopup] = useState(false);
+
+    // Auth
+    const [showAuthPopup, setShowAuthPopup] = useState(false);
 
     // cookies stuff
     const [extensionExists, setExtensionExists] = useState(null);
@@ -547,7 +550,10 @@ const SelectItems = () => {
             <ToastContainer />
             <div className="top-section">
                 <div className="header">
-                    {/*<button className="home-button" onClick={() => window.location.href = "/"}>Home</button>*/}
+                    <button className="auth-popup-trigger" onClick={() => setShowAuthPopup(true)}>
+                        👤 Login / Register
+                    </button>
+                    <AuthPopup showAuthPopup={showAuthPopup} setShowAuthPopup={setShowAuthPopup} />
                     <button className="cart-button" onClick={() => setCartVisible(!cartVisible)}>🛒 Shopping List</button>
                 </div>
                 <h1 className="items-title">Select Individual Items</h1>

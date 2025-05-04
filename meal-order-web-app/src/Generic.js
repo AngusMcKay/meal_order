@@ -1,6 +1,8 @@
 import React, { useState }  from "react";
 import "./Generic.css";
 import { useUser } from "./context/UserContext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const CartSidebar = ({ cartVisible, setCartVisible, orderList, removeCartItem, removeCartMeal, loadBasket, clearCartCheck }) => {
     return (
@@ -161,15 +163,24 @@ export const AuthPopup = ({ showAuthPopup, setShowAuthPopup }) => {
         setErrorMessage(""); // Clear any previous errors
         try {
             if (isRegistering) {
-                await register(email, password);
-                alert("Registration successful!");
+                const result = await register(email, password);
+                if (result && result.success) {
+                    toast.success("Registration successful!", { position: "top-center" });
+                    setShowAuthPopup(false); // Close the popup after success
+                } else {
+                    setErrorMessage("Registration failed. Please try again.");
+                }
             } else {
-                await login(email, password);
-                alert("Login successful!");
+                const result = await login(email, password);
+                if (result && result.success) {
+                    toast.success("Login successful!", { position: "top-center" });
+                    setShowAuthPopup(false); // Close the popup after success
+                } else {
+                    setErrorMessage("Login failed. Please check your details and try again.");
+                }
             }
-            setShowAuthPopup(false); // Close the popup after success
         } catch (error) {
-            setErrorMessage(error.message || "An error occurred. Please try again.");
+            toast.error(error.message || "An error occurred. Please try again.", { position: "top-center" });
         }
     };
 
