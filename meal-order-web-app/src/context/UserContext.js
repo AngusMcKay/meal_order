@@ -52,7 +52,9 @@ export const UserContextProvider = ({ children }) => {
             }
     
             const data = await response.json();
-            console.log("Login successful:", data);
+
+            // Update the user state with the logged-in user
+            setUser(data.user);
     
             // Optionally store the token in localStorage or state
             localStorage.setItem("token", data.token);

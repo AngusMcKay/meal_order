@@ -118,6 +118,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         const { email, password, anonUserId } = req.body;
+        console.log("anonUserId in login:", anonUserId); // useful for debugging
 
         if (!email || !password || !anonUserId) {
             return res.status(400).json({ error: "Missing required fields" });
@@ -140,6 +141,12 @@ router.post("/login", async (req, res) => {
         if (otherUser && otherUser._id.toString() !== user._id.toString()) {
             // Remove the anonUserId from the other account
             otherUser.anonIds = otherUser.anonIds.filter(id => id !== anonUserId);
+
+            // Ensure the anonIds array is not empty
+            if (otherUser.anonIds.length === 0) {
+                otherUser.anonIds.push(`nonanon_placeholder_${otherUser._id}`); // Assign a fallback anonUserId
+            }
+
             await otherUser.save();
         }
 
@@ -152,7 +159,7 @@ router.post("/login", async (req, res) => {
         // Generate a JWT token
         const token = jwt.sign({ email }, "your_jwt_secret", { expiresIn: "1h" });
 
-        res.status(200).json({ message: "Login successful", token });
+        res.status(200).json({ message: "Login successful", token, user });
     } catch (error) {
         console.error("Error in /login:", error);
         res.status(500).json({ error: "Internal Server Error" });
