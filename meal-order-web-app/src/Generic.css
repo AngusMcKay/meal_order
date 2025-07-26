@@ -350,6 +350,9 @@
 }
 
 .order-table-popup {
+    max-height: 85vh;        /* Adjust as needed */
+    overflow-y: auto;
+    box-sizing: border-box;
     position: fixed;
     background: white;
     color: #444;
@@ -815,6 +818,8 @@
     }
     
     .order-table-popup {
+        max-height: 70vh;        /* Adjust as needed */
+        overflow-y: auto;
         position: fixed;
         background: white;
         color: #444;
